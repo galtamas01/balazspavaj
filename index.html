@@ -1,0 +1,227 @@
+<!doctype html>
+<html lang="ro">
+
+<head>
+  <meta charset="UTF-8" />
+  <link rel="icon" type="image/svg+xml" href="/vite.svg" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <link rel="stylesheet" href="/src/global.css">
+  <link rel="stylesheet" href="/src/style.css">
+  <link rel="stylesheet" href="/src/style-media.css">
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" />
+  <link rel="apple-touch-icon" sizes="180x180" href="/favicons/apple-touch-icon.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/favicons/favicon-32x32.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/favicons/favicon-16x16.png">
+  <title>Balázs Pavaj</title>
+</head>
+
+<body>
+  <div id="hero-bg-container">
+    <video autoplay muted loop playsinline src="/balazspavaj_hero3.mp4"></video>
+  </div>
+
+  <navbar-element></navbar-element>
+
+  <div id="hero-greeting">
+    <h1 id="greeting-h1">Calitate în <br>pavaje și execuție</h1>
+    <p id="greeting-p">Descoperă soluțiile noastre de pavare și placare, create pentru a transforma spațiul tău cu
+      precizie și durabilitate.</p>
+    <div id="hero-greeting-buttons">
+      <a href="#services" class="menu-button">Servicii</a>
+      <a href="#contact" class="menu-button">Contactează-ne</a>
+    </div>
+  </div>
+
+  <div id="about-section" class="fade-in">
+    <div class="about-header">
+      <div class="icon-divider">
+        <span class="line"></span>
+        <span class="material-symbols-outlined icon">book_5</span>
+        <span class="line"></span>
+      </div>
+      <h3 class="red-subtitle">Povestea Noastră</h3>
+      <h2 class="title">DESPRE NOI</h2>
+    </div>
+
+    <div class="about-card">
+      <div class="corner top-left"></div>
+      <div class="corner top-right"></div>
+      <div class="corner bottom-left"></div>
+      <div class="corner bottom-right"></div>
+
+      <div class="card-content">
+        <div class="text-container">
+          <div class="quote-mark">“</div>
+          <p>Compania noastră execută lucrări de pavaj de peste 20 de ani, timp în care am acumulat o experiență vastă
+            și numeroși clienți mulțumiți. Alegeți din gama noastră de pavaje industriale și de design la o calitate
+            premium și contactați-ne cu încredere. Noi le producem, le livrăm și le montăm – ne ocupăm de absolut totul,
+            până la ultimele finisaje. Dumneavoastră vă rămâne doar să admirați rezultatul final.</p>
+          <div class="icon-divider bottom-divider">
+            <span class="line"></span>
+            <span class="material-symbols-outlined icon">construction</span>
+            <span class="line"></span>
+          </div>
+        </div>
+
+        <div class="image-container">
+          <div class="image-wrapper">
+            <img src="/despre_noi.jpeg" alt="">
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <!-- <div id="filler"></div> -->
+
+  <div id="products" class="fade-in">
+    <product-categories></product-categories>
+  </div>
+
+  <div id="services" class="fade-in">
+    <h2 class="subtitle">Servicii</h2>
+    <div id="services-grid">
+      <div class="service">
+        <div class="service-image-wrapper">
+          <img src="/service_1.jpg" alt="Service image">
+        </div>
+        <div class="service-description">
+          <div class="badge">
+            <span class="material-symbols-outlined">front_loader</span>
+          </div>
+          <h3>Montaj pavaj</h3>
+          <p>Echipele noastre execută fiecare etapă a lucrării la o calitate premium, de la proiectare până la ultimele
+            finisaje. Producție de pavaj, livrare, pregătirea terenului și montajul propriu-zis, totul într-un singur
+            loc.</p>
+        </div>
+      </div>
+      <div class="service">
+        <div class="service-image-wrapper">
+          <img src="/service_2.webp" alt="Service image">
+        </div>
+        <div class="service-description">
+          <div class="badge">
+            <span class="material-symbols-outlined">local_shipping</span>
+          </div>
+          <h3>Transport pavaj</h3>
+          <p>Dacă achiziționați pavajul de la noi, trebuie doar să ne indicați adresa, iar noi vi-l livrăm rapid și
+            eficient.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div id="gallery" class="fade-in">
+    <h2 class="subtitle">Proiecte recente</h2>
+    <div class="gallery-grid">
+      <div class="gallery-item fade-in fade-delay-1">
+        <img src="/reference/reference1.jpeg" alt="Reference image">
+      </div>
+      <div class="gallery-item fade-in fade-delay-2">
+        <img src="/reference/reference2.jpeg" alt="Reference image">
+      </div>
+      <div class="gallery-item fade-in fade-delay-3">
+        <img src="/reference/reference3.jpeg" alt="Reference image">
+      </div>
+      <div class="gallery-item fade-in fade-delay-4">
+        <img src="/reference/reference4.jpeg" alt="Reference image">
+      </div>
+      <div class="gallery-item fade-in fade-delay-5">
+        <img src="/reference/reference5.jpeg" alt="Reference image">
+      </div>
+      <div class="gallery-item fade-in fade-delay-6">
+        <img src="/reference/reference6.jpeg" alt="Reference image">
+      </div>
+      <div class="gallery-item fade-in fade-delay-7">
+        <img src="/reference/reference7.jpeg" alt="Reference image">
+      </div>
+      <div class="gallery-item fade-in fade-delay-8">
+        <img src="/reference/reference8.jpeg" alt="Reference image">
+      </div>
+      <div class="gallery-item fade-in fade-delay-9">
+        <img src="/reference/reference9.jpeg" alt="Reference image">
+      </div>
+      <div class="gallery-item fade-in fade-delay-10">
+        <img src="/reference/reference10.jpeg" alt="Reference image">
+      </div>
+    </div>
+  </div>
+
+  <div id="faq" class="fade-in">
+    <h2 class="subtitle">Întrebări frecvente</h2>
+    <div id="faq-grid">
+      <div class="faq-element fade-in fade-delay-1">
+        <button class="faq-question">
+          <span>Ce garanție oferiți pentru produse?</span>
+          <span class="material-symbols-outlined arrow">keyboard_arrow_down</span>
+        </button>
+        <div class="faq-answer">
+          <div class="faq-answer-inner">
+            <p>Oferim o garanție completă de 5 ani pentru toate pavajele comercializate de noi. Deoarece lucrăm cu
+              materiale de calitate premium și tehnologii de producție moderne, garantăm că pavajele noastre vor rezista
+              cu brio ani la rând intemperiilor, înghețului și uzurii zilnice. Dumneavoastră trebuie doar să vă bucurați
+              de un rezultat final durabil și estetic.</p>
+          </div>
+        </div>
+      </div>
+      <div class="faq-element fade-in fade-delay-2">
+        <button class="faq-question">
+          <span>Cum pot solicita o ofertă de preț pentru lucrarea planificată?</span>
+          <span class="material-symbols-outlined arrow">keyboard_arrow_down</span>
+        </button>
+        <div class="faq-answer">
+          <div class="faq-answer-inner">
+            <p>Vă pregătim cu cea mai mare plăcere o ofertă de preț personalizată și transparentă! Nu există costuri
+              ascunse: calculăm în detaliu prețul pavajului ales, al livrării și al montajului profesionist, în funcție
+              de cerințele dumneavoastră specifice. Contactați-ne cu încredere, iar colegii noștri vor lua legătura cu
+              dumneavoastră în scurt timp pentru a stabili detaliile.</p>
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+  </div>
+  <div id="contact-bg">
+    <div id="contact" class="fade-in">
+      <h2 class="subtitle">Contactează-ne cu încredere!</h2>
+      <div id="contact-container">
+        <div class="contact-box fade-in fade-delay-1" id="address">
+          <img src="/address_icon.svg" alt="Address icon">
+          <div class="contact-text">
+            <h3 class="subtitle">Adresă</h3>
+            <address>
+              <p>Brădești, nr. 181</p>
+            </address>
+          </div>
+        </div>
+        <div class="contact-box fade-in fade-delay-2" id="phone">
+          <img src="/telephone_icon2.svg" alt="Telephone icon">
+          <div class="contact-text">
+            <h3 class="subtitle">Telefon</h3>
+            <address>
+              <p>0712 345 678</p>
+            </address>
+          </div>
+        </div>
+        <div class="contact-box fade-in fade-delay-3" id="email">
+          <img src="/email_icon.svg" alt="Email icon">
+          <div class="contact-text">
+            <h3 class="subtitle">Email</h3>
+            <address>
+              <p>balazspavaj@gmail.com</p>
+            </address>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <footer-element></footer-element>
+
+ 
+
+  <script src="/src/components.js"></script>
+  <script type="module" src="/src/main.js"></script>
+</body>
+
+</html>

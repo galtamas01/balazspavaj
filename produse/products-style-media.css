@@ -1,0 +1,33 @@
+/* MEDIUM SCREEN AND ABOVE */
+@media (min-width: 680px) {
+    #pavaje-grid {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 2rem;
+    }
+
+}
+
+/* LARGE SCREEN AND ABOVE */
+@media (min-width: 1024px) {
+    #pavaje-grid {
+        grid-template-columns: repeat(3, 1fr);
+    }
+
+    #pavaje {
+        width: 80%;
+    }
+
+    #header p {
+        width: 60%;
+    }
+
+
+}
+
+/* ULTRA WIDE SCREENS AND ABOVE */
+@media (min-width: 2000px) {
+    #pavaje,
+    #pavaje-grid {
+        width: 50%;
+    }
+}
