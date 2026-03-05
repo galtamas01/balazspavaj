@@ -2,20 +2,20 @@ class Navbar extends HTMLElement {
     connectedCallback() {
         this.innerHTML = `
             <nav>
-                <a href="/"><img src="/balazspavaj_logo.png" alt="Balázs Pavaj Logo" id="nav-logo"></a>
+                <a href="/"><img src="/assets/balazspavaj_logo.png" alt="Balázs Pavaj Logo" id="nav-logo"></a>
                 <div id="menu-button-container">
                     <a href="#products" class="menu-button">Produse</a>
                     <a href="#faq" class="menu-button">FAQ</a>
                     <a href="#about-section" class="menu-button">Despre noi</a>
                 </div>
                 <div id="social-media-icons">
-                    <a href="/checkout/checkout.html"><img src="/cart_icon.svg" alt="Cart icon" id="cart-icon-desktop"></a>
-                    <a href=""><img src="/social_media_icons/facebook.svg" alt="Facebook icon" class="social-icon"></a>
-                    <a href=""><img src="/social_media_icons/instagram.svg" alt="Instagram icon" class="social-icon"></a>
-                    <a href=""><img src="/social_media_icons/tiktok.svg" alt="Tiktok icon" class="social-icon"></a>
+                    <a href="/checkout/checkout.html"><img src="/assets/cart_icon.svg" alt="Cart icon" id="cart-icon-desktop"></a>
+                    <a href=""><img src="/assets/social_media_icons/facebook.svg" alt="Facebook icon" class="social-icon"></a>
+                    <a href=""><img src="/assets/social_media_icons/instagram.svg" alt="Instagram icon" class="social-icon"></a>
+                    <a href=""><img src="/assets/social_media_icons/tiktok.svg" alt="Tiktok icon" class="social-icon"></a>
                 </div>
                 <div id="hamburger-icon">
-                    <a href="/checkout/checkout.html"><img src="/cart_icon.svg" alt="Cart icon" id="cart-icon-mobile"></a>
+                    <a href="/checkout/checkout.html"><img src="/assets/cart_icon.svg" alt="Cart icon" id="cart-icon-mobile"></a>
                 <button id="hamburger-icon-btn">
                     <span>☰</span>
                 </button>
@@ -24,13 +24,13 @@ class Navbar extends HTMLElement {
             <div id="mobile-menu-container">
                 <button id="mobile-menu-close">&times;</button>
                 <div id="mobile-menu">
-                    <a href="#products" class="mobile-menu-button">Produse</a>
-                    <a href="#faq" class="mobile-menu-button">FAQ</a>
-                    <a href="#about-section" class="mobile-menu-button">Despre noi</a>
+                    <a href="/index.html#products" class="mobile-menu-button">Produse</a>
+                    <a href="/index.html#faq" class="mobile-menu-button">FAQ</a>
+                    <a href="/index.html#about-section" class="mobile-menu-button">Despre noi</a>
                     <div class="social-media-icons">
-                        <a href=""><img src="/social_media_icons/facebook.svg" alt="Facebook icon" class="social-icon"></a>
-                        <a href=""><img src="/social_media_icons/instagram.svg" alt="Instagram icon" class="social-icon"></a>
-                        <a href=""><img src="/social_media_icons/tiktok.svg" alt="Tiktok icon" class="social-icon"></a>
+                        <a href=""><img src="/assets/social_media_icons/facebook.svg" alt="Facebook icon" class="social-icon"></a>
+                        <a href=""><img src="/assets/social_media_icons/instagram.svg" alt="Instagram icon" class="social-icon"></a>
+                        <a href=""><img src="/assets/social_media_icons/tiktok.svg" alt="Tiktok icon" class="social-icon"></a>
                     </div>
                 </div>
             </div>
@@ -44,9 +44,9 @@ class Footer extends HTMLElement {
         <footer>
             <p>© Balázs Pavaj - 2026</p>
             <div class="social-media-icons">
-                <a href="#"><img src="/social_media_icons/facebook_wh.svg" alt="Facebook icon"></a>
-                <a href="#"><img src="/social_media_icons/instagram_wh.svg" alt="Instagram icon"></a>
-                <a href="#"><img src="/social_media_icons/tiktok_wh.svg" alt="Tiktok icon"></a>
+                <a href="#"><img src="/assets/social_media_icons/facebook_wh.svg" alt="Facebook icon"></a>
+                <a href="#"><img src="/assets/social_media_icons/instagram_wh.svg" alt="Instagram icon"></a>
+                <a href="#"><img src="/assets/social_media_icons/tiktok_wh.svg" alt="Tiktok icon"></a>
             </div>
         </footer>
         `
@@ -115,7 +115,7 @@ class ProductCategories extends HTMLElement {
                     <a href="/produse/pavaje.html">
                         <div class="product fade-in fade-delay-1">
                         <div class="product-card-image">
-                            <img src="/category_pavaj.png" alt="Product image">
+                            <img src="/assets/category_pavaj.png" alt="Product image">
                         </div>
                         <div class="product-card-text">
                             <h3>Pavaje</h3>
@@ -126,7 +126,7 @@ class ProductCategories extends HTMLElement {
                     <a href="/produse/premium-pavaje.html">
                         <div class="product fade-in fade-delay-2">
                         <div class="product-card-image">
-                            <img src="/category_premium.png" alt="Product image">
+                            <img src="/assets/category_premium.png" alt="Product image">
                         </div>
                         <div class="product-card-text">
                             <h3>Pavaje Premium</h3>
@@ -137,7 +137,7 @@ class ProductCategories extends HTMLElement {
                     <a href="/produse/borduri.html">
                         <div class="product fade-in fade-delay-3">
                         <div class="product-card-image">
-                            <img src="/category_bordura.png" alt="Product image">
+                            <img src="/assets/category_bordura.png" alt="Product image">
                         </div>
                         <div class="product-card-text">
                             <h3>Borduri</h3>
@@ -148,7 +148,7 @@ class ProductCategories extends HTMLElement {
                     <a href="/produse/rigole.html">
                         <div class="product fade-in fade-delay-4">
                         <div class="product-card-image">
-                            <img src="/category_rigola.png" alt="Product image">
+                            <img src="/assets/category_rigola.png" alt="Product image">
                         </div>
                         <div class="product-card-text">
                             <h3>Rigole</h3>
