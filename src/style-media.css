@@ -165,11 +165,11 @@
     }
 
     #contact-bg {
-        background-image: url('/contact_bg_mobile.png')
+        background-image: url('/assets/contact_bg_mobile.png')
     }
 }
 
-@media (max-width: 542px) {
+@media (max-width: 600px) {
     #hero-greeting-buttons {
         flex-direction: column;
     }
