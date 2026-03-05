@@ -44,7 +44,7 @@
   letter-spacing: 2px;
   line-height: 1.2;
   font-size: calc(50px + 2.5vw);
-  text-shadow: 0px 0px 5px var(--custom-black);
+  text-shadow: 0px 0px 5px rgba(0, 0, 0, 0.4);
   text-transform: uppercase;
   margin-bottom: 2rem;
 }
@@ -52,7 +52,7 @@
 #hero-greeting p {
   font-family: var(--font-inter);
   font-size: calc(15px + 0.5vw);
-  text-shadow: 0px 0px 5px var(--custom-black);
+  text-shadow: 0px 0px 5px rgba(0, 0, 0, 0.4);
   width: 50%;
 }
 
@@ -407,7 +407,7 @@
   color: var(--custom-white);
   font-family: var(--font-anton);
   font-size: calc(18px + 1.5vw);
-  text-shadow: 0px 0px 5px var(--custom-black);
+  text-shadow: 0px 0px 5px rgba(0, 0, 0, 0.4);
   text-transform: uppercase;
   z-index: 2;
   transition: all 0.2s ease-in-out;
@@ -423,7 +423,7 @@
   color: var(--custom-white);
   font-family: var(--font-inter);
   font-size: calc(10px + 0.5vw);
-  text-shadow: 0px 0px 5px var(--custom-black);
+  text-shadow: 0px 0px 5px rgba(0, 0, 0, 0.4);
   z-index: 2;
   transition: all 0.2s ease-in-out;
   opacity: 0;
