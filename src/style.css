@@ -457,14 +457,14 @@
 
 .gallery-grid {
   column-count: 3;
-  column-gap: 1.5rem;
+  column-gap: 0.5rem;
 }
 
 .gallery-item {
   -webkit-column-break-inside: avoid;
   break-inside: avoid;
   page-break-inside: avoid;
-  margin-bottom: 1.5rem;
+  margin-bottom: 1rem;
   overflow: hidden;
   border-radius: 8px;
   padding: 10px;
@@ -488,6 +488,7 @@
   gap: 2rem;
   align-items: start;
   width: 100%;
+  padding-bottom: 10px;
 }
 
 .faq-element {
