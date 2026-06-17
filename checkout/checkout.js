@@ -49,7 +49,6 @@ class CheckoutCart extends HTMLElement {
                         <h3>${item.name}</h3>
                         ${detailsHTML}
                         <p>Cantitate: ${item.quantity} paleti</p>
-                        <p class="price-tag">${formattedItemTotal} RON</p>
                     </div>
                 </div>
             `;
@@ -77,7 +76,7 @@ class CheckoutCart extends HTMLElement {
             </div>
 
             <hgroup>
-                <h2 class="subtitle" id="main-title" >Coșul tău</h2>
+                <h2 class="subtitle" id="main-title" >Ofertă</h2>
                 <p>(${cart.length} produse)</p>
             </hgroup>
             <div class="line hgroup-line"></div>
@@ -97,23 +96,20 @@ class CheckoutCart extends HTMLElement {
                 <section class="checkout-summary">
                     <div class="summary-card">
                         <div class="summary-header">
-                            <h3 class="subtitle">Sumar comandă</h3>
+                            <h3 class="subtitle">Cerere de ofertă</h3>
                         </div>
                         <div class="summary-body">
                             <div class="subtotal">
-                                <p>Subtotal</p>
-                                <p>${formattedSubtotal} RON</p>
+                                <p>Puteți trimite cererea de ofertă pentru produsele din listă în următoarea secțiune a meniului.</p>
                             </div>
                             <div class="delivery">
-                                <p>Livrare</p>
-                                <p>Calculat la final</p>
+                                <p>După ce introduceți datele dumneavoastră personale, vom lua legătura cu dumneavoastră în cel mai scurt timp.</p>
                             </div>
                         </div>
                         <div class="separator-line"></div>
                         <div class="summary-footer">
-                            <div class="total">
-                                <p>Total</p>
-                                <p>${formattedSubtotal} RON</p>
+                            <div class="summary-body">
+                                <p>Solicitarea ofertei de preț nu vă obligă la nimic.</p>
                             </div>
                             <button id="btn-next-step" class="menu-button">Continuă</button>
                         </div>
@@ -128,7 +124,7 @@ class CheckoutCart extends HTMLElement {
                         </div>
                         <div class="summary-footer">
                             <span class="material-symbols-outlined">call</span>
-                            <p>0722 222 222</p>
+                            <p>0743 374 877</p>
                         </div>
                     </div>
                 </section>
@@ -227,25 +223,22 @@ class CheckoutCart extends HTMLElement {
                         <section class="checkout-summary">
                             <div class="summary-card">
                                 <div class="summary-header">
-                                    <h3 class="subtitle">Sumar comandă</h3>
+                                    <h3 class="subtitle">Cerere de ofertă</h3>
                                 </div>
                                 <div class="summary-body">
                                     <div class="subtotal">
-                                        <p>Subtotal</p>
-                                        <p>${formattedSubtotal} RON</p>
+                                        <p>Puteți trimite cererea de ofertă pentru produsele din listă în următoarea secțiune a meniului.</p>
                                     </div>
                                     <div class="delivery">
-                                        <p>Livrare</p>
-                                        <p>Calculat la final</p>
+                                        <p>După ce introduceți datele dumneavoastră personale, vom lua legătura cu dumneavoastră în cel mai scurt timp.</p>
                                     </div>
                                 </div>
                                 <div class="separator-line"></div>
                                 <div class="summary-footer">
-                                    <div class="total">
-                                        <p>Total</p>
-                                        <p>${formattedSubtotal} RON</p>
+                                    <div class="summary-body">
+                                        <p>Solicitarea ofertei de preț nu vă obligă la nimic.</p>
                                     </div>
-                                    <button type="submit"id="final-btn" class="menu-button" form="delivery-form">Finalizare comandă</button>
+                                    <button type="submit"id="final-btn" class="menu-button" form="delivery-form">Cerere de ofertă</button>
                                 </div>
                             </div>
 
@@ -258,7 +251,7 @@ class CheckoutCart extends HTMLElement {
                                 </div>
                                 <div class="summary-footer">
                                     <span class="material-symbols-outlined">call</span>
-                                    <p>0722 222 222</p>
+                                    <p>0743 374 877</p>
                                 </div>
                             </div>
                         </section>

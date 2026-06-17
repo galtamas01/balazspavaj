@@ -74,7 +74,8 @@ main {
     align-items: center;
 }
 
-.color-selector p, .type-selector p {
+.color-selector p,
+.type-selector p {
     font-family: var(--font-inter);
     font-size: calc(10px + 0.5vw);
     font-weight: 500;
@@ -82,7 +83,8 @@ main {
 
 }
 
-.color-selector p:first-child, .type-selector p:first-child {
+.color-selector p:first-child,
+.type-selector p:first-child {
     text-transform: uppercase;
     color: var(--text-grey);
     font-size: calc(12px + 0.5vw);
@@ -91,6 +93,7 @@ main {
 
 #color-name {
     color: var(--custom-black);
+    padding-left: 1rem;
 }
 
 .color-options {
@@ -164,6 +167,10 @@ main {
 
 .color-swatch.tundra {
     background-color: #728C74;
+}
+
+.color-swatch.black {
+    background-color: black;
 }
 
 .type-selector select {
@@ -270,17 +277,135 @@ main {
     .quantity-container {
         padding: 1.8rem 1.5rem;
     }
+
     .quantity-input-container {
         flex-direction: row;
     }
+
     .product-image-section {
         margin: 0;
-    };
+    }
 
 }
 
 @media (min-width: 1800px) {
-    .main-header, main {
+
+    .main-header,
+    main {
         width: 60%;
+    }
+}
+
+/* Cart modal styling (Toast style at bottom center) */
+.cart-modal-overlay {
+    position: fixed;
+    bottom: 2rem;
+    left: 50%;
+    transform: translate(-50%, 40px);
+    width: calc(100vw - 2rem);
+    max-width: 450px;
+    z-index: 1000;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.3s ease, transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.cart-modal-overlay.active {
+    opacity: 1;
+    transform: translate(-50%, 0);
+    pointer-events: auto;
+}
+
+.cart-modal {
+    background-color: var(--custom-white);
+    border-radius: 16px;
+    padding: 1.5rem;
+    width: 100%;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
+    border: 1px solid rgba(0, 0, 0, 0.08);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+}
+
+.cart-modal-icon {
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+    background-color: rgba(176, 33, 38, 0.1);
+    color: var(--custom-red);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    margin-bottom: 1rem;
+}
+
+.cart-modal-icon span {
+    font-size: 28px;
+}
+
+.cart-modal h3 {
+    font-family: var(--font-anton);
+    color: var(--custom-red);
+    font-size: 1.4rem;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    margin-bottom: 0.5rem;
+}
+
+.cart-modal p {
+    font-family: var(--font-inter);
+    color: var(--text-grey);
+    font-size: 0.9rem;
+    line-height: 1.4;
+    margin-bottom: 1.2rem;
+}
+
+.cart-modal p strong {
+    color: var(--custom-black);
+}
+
+.cart-modal-buttons {
+    display: flex;
+    gap: 0.8rem;
+    width: 100%;
+    justify-content: center;
+}
+
+.cart-modal-buttons button,
+.cart-modal-buttons a {
+    flex: 1;
+    height: 2.8rem;
+    font-size: 0.88rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.cart-modal-buttons a {
+    text-decoration: none;
+}
+
+.cart-modal-buttons .menu-button.secondary {
+    background-color: transparent;
+    color: var(--custom-red);
+    border: 2px solid var(--custom-red);
+}
+
+.cart-modal-buttons .menu-button.secondary:hover {
+    background-color: rgba(176, 33, 38, 0.05);
+    transform: scale(1.03);
+    color: white;
+}
+
+@media (max-width: 480px) {
+    .cart-modal-buttons {
+        flex-direction: column;
+        gap: 0.6rem;
+    }
+    .cart-modal-buttons button,
+    .cart-modal-buttons a {
+        width: 100%;
     }
 }

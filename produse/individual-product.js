@@ -16,7 +16,7 @@ class ProductDetails extends HTMLElement {
                 if (!product) {
                     this.innerHTML = `
                         <main style="text-align: center; margin-top: 5rem;">
-                            <h2>Produsul nu a fost găsit. (A termék nem található)</h2>
+                            <h2>Produsul nu a fost găsit.</h2>
                             <a href="/index.html" class="menu-button">Înapoi la acasă</a>
                         </main>`;
                     return;
@@ -25,12 +25,31 @@ class ProductDetails extends HTMLElement {
                 const formattedCategory = category.replace('-', ' ').replace(/\b\w/g, c => c.toUpperCase());
 
                 let colorHtml = '';
+                let defaultImage = product.image;
+                let defaultPrice = product.price;
+
                 if (product.colors && product.colors.length > 0) {
+                    const firstColor = product.colors[0];
+                    const firstColorName = typeof firstColor === 'object' ? firstColor.name : firstColor;
+                    
+                    if (typeof firstColor === 'object') {
+                        if (firstColor.image) defaultImage = firstColor.image;
+                        if (firstColor.price) defaultPrice = firstColor.price;
+                    }
+
                     const colorButtons = product.colors.map((color, index) => {
-                        const cssClass = this.getColorClass(color);
+                        const colorName = typeof color === 'object' ? color.name : color;
+                        const colorImage = typeof color === 'object' ? (color.image || '') : '';
+                        const colorPrice = typeof color === 'object' ? (color.price || '') : '';
+
+                        const cssClass = this.getColorClass(colorName);
                         const activeClass = index === 0 ? 'active' : '';
                         return `
-                            <button class="color-swatch ${cssClass} ${activeClass}" data-color="${color}" title="${color}"></button>
+                            <button class="color-swatch ${cssClass} ${activeClass}" 
+                                    data-color="${colorName}" 
+                                    data-image="${colorImage}" 
+                                    data-price="${colorPrice}" 
+                                    title="${colorName}"></button>
                         `;
                     }).join('');
 
@@ -38,7 +57,7 @@ class ProductDetails extends HTMLElement {
                         <div class="color-selector">
                             <header class="color-header">
                                 <p>Culoare</p>
-                                <p id="color-name">${product.colors[0]}</p>
+                                <p id="color-name">${firstColorName}</p>
                             </header>
                             <div class="color-options">
                                 ${colorButtons}
@@ -80,12 +99,12 @@ class ProductDetails extends HTMLElement {
 
                     <main>
                         <section class="product-image-section">
-                            <img src="${product.image}" alt="Product image">
+                            <img src="${defaultImage}" alt="Product image">
                         </section>
                         <section class="product-info-section">
                             <header class="info-header">
                                 <h1 class="subtitle">${product.name}</h1>
-                                <p class="price">${product.price} RON / paleta</p>
+                                <p class="price">${defaultPrice} RON / paleta</p>
                                 <div class="line"></div>
                             </header>
 
@@ -122,26 +141,43 @@ class ProductDetails extends HTMLElement {
                         swatches.forEach(s => s.classList.remove('active'));
                         swatch.classList.add('active');
 
-                        document.getElementById('color-name').textContent = swatch.getAttribute('data-color');
+                        const colorName = swatch.getAttribute('data-color');
+                        const colorImage = swatch.getAttribute('data-image');
+                        const colorPrice = swatch.getAttribute('data-price');
+
+                        document.getElementById('color-name').textContent = colorName;
+
+                        const imgElement = this.querySelector('.product-image-section img');
+                        if (imgElement) {
+                            imgElement.src = colorImage || product.image;
+                        }
+
+                        const priceElement = this.querySelector('.price');
+                        if (priceElement) {
+                            priceElement.textContent = `${colorPrice || product.price} RON / paleta`;
+                        }
                     });
                 })
 
                 const addToCartBtn = this.querySelector('.quantity-container .menu-button');
                 const quantityInput = this.querySelector('#quantity');
                 const typeSelect = this.querySelector('#type');
-                const colorNameDisplay = this.querySelector('#color-name');
 
                 if (addToCartBtn) {
                     addToCartBtn.addEventListener('click', () => {
                         const selectedQuantity = parseInt(quantityInput.value) || 1;
                         const selectedType = typeSelect ? typeSelect.value : null;
-                        const selectedColor = colorNameDisplay ? colorNameDisplay.textContent : null;
+
+                        const activeSwatch = this.querySelector('.color-swatch.active');
+                        const selectedColor = activeSwatch ? activeSwatch.getAttribute('data-color') : null;
+                        const selectedImage = activeSwatch ? (activeSwatch.getAttribute('data-image') || product.image) : product.image;
+                        const selectedPrice = activeSwatch ? (activeSwatch.getAttribute('data-price') || product.price) : product.price;
 
                         const cartItem = {
                             id: productId,
                             name: product.name,
-                            price: product.price,
-                            image: product.image,
+                            price: selectedPrice,
+                            image: selectedImage,
                             quantity: selectedQuantity,
                             color: selectedColor,
                             type: selectedType
@@ -162,6 +198,62 @@ class ProductDetails extends HTMLElement {
                         }
 
                         localStorage.setItem('shoppingCart', JSON.stringify(cart));
+
+                        // Create and show the popup modal
+                        const modalOverlay = document.createElement('div');
+                        modalOverlay.className = 'cart-modal-overlay';
+                        
+                        const colorSpec = selectedColor ? ` (${selectedColor})` : '';
+                        
+                        modalOverlay.innerHTML = `
+                            <div class="cart-modal">
+                                <div class="cart-modal-icon">
+                                    <span class="material-symbols-outlined">check_circle</span>
+                                </div>
+                                <h3>Produs adăugat!</h3>
+                                <p>Produsul <strong>${cartItem.name}</strong>${colorSpec} a fost adăugat cu succes la solicitarea de ofertă.</p>
+                                <div class="cart-modal-buttons">
+                                    <button class="menu-button secondary" id="btn-continue">Continuă cumpărăturile</button>
+                                    <a href="/checkout/checkout.html" class="menu-button" id="btn-view-cart">Vezi oferta</a>
+                                </div>
+                            </div>
+                        `;
+
+                        document.body.appendChild(modalOverlay);
+
+                        // Trigger scale/fade animation
+                        setTimeout(() => {
+                            modalOverlay.classList.add('active');
+                        }, 10);
+
+                        // Helper function to dismiss the modal
+                        const dismissModal = () => {
+                            if (modalOverlay.parentNode) {
+                                modalOverlay.classList.remove('active');
+                                setTimeout(() => {
+                                    if (modalOverlay.parentNode) {
+                                        modalOverlay.remove();
+                                    }
+                                }, 300);
+                            }
+                        };
+
+                        // Auto-dismiss after 5 seconds
+                        const dismissTimeout = setTimeout(dismissModal, 5000);
+
+                        // Close overlay when clicking "Continuă cumpărăturile"
+                        modalOverlay.querySelector('#btn-continue').addEventListener('click', () => {
+                            clearTimeout(dismissTimeout);
+                            dismissModal();
+                        });
+
+                        // Close overlay when clicking outside the modal
+                        modalOverlay.addEventListener('click', (e) => {
+                            if (e.target === modalOverlay) {
+                                clearTimeout(dismissTimeout);
+                                dismissModal();
+                            }
+                        });
 
                         const originalText = addToCartBtn.textContent;
                         addToCartBtn.textContent = 'Adăugat!';
@@ -192,7 +284,8 @@ class ProductDetails extends HTMLElement {
             'antracit': 'anthracite',
             'maro': 'brown',
             'roșu': 'red',
-            'bazalt': 'basalt'
+            'bazalt': 'basalt',
+            'negru': 'black'
         }
 
         return map[colorName.toLowerCase()] || colorName.toLowerCase().replace(/\s/g, '-');

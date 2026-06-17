@@ -2,136 +2,357 @@
     "pavaje": {
         "autoblocant-6cm": {
             "name": "Pavaj autoblocant 6 cm",
-            "image": "/assets/temp/pavaj1.png",
+            "image": "/assets/pavaje/autoblocant6_gri.webp",
             "dimensions": "20 x 16,5 x 6 cm",
             "palettes": "11,31 mp/paleti",
-            "price": "799",
+            "price": "40 - 50",
             "colors": [
-                "gri",
-                "alb",
-                "antracit",
-                "maro",
-                "roșu"
+                {
+                    "name": "gri",
+                    "image": "/assets/pavaje/autoblocant6_gri.webp",
+                    "price": "40"
+                },
+                {
+                    "name": "alb",
+                    "image": "/assets/pavaje/autoblocant6_alb.webp",
+                    "price": "50"
+                },
+                {
+                    "name": "antracit",
+                    "image": "/assets/pavaje/autoblocant6_antracit.webp",
+                    "price": "45"
+                },
+                {
+                    "name": "maro",
+                    "image": "/assets/pavaje/autoblocant6_maro.webp",
+                    "price": "45"
+                },
+                {
+                    "name": "roșu",
+                    "image": "/assets/pavaje/autoblocant6_rosu.webp",
+                    "price": "45"
+                }
             ]
         },
         "autoblocant-8cm": {
             "name": "Pavaj autoblocant 8 cm",
-            "image": "/assets/temp/pavaj2.png",
+            "image": "/assets/pavaje/autoblocant6_maro.webp",
             "dimensions": "20 x 16,5 x 8 cm",
             "palettes": "9,43 mp/paleti",
-            "price": "899",
-            "colors": [
-                "gri",
-                "alb",
-                "antracit",
-                "maro",
-                "roșu"
+            "price": "48 - 58",
+             "colors": [
+                {
+                    "name": "gri",
+                    "image": "/assets/pavaje/autoblocant6_gri.webp",
+                    "price": "48"
+                },
+                {
+                    "name": "alb",
+                    "image": "/assets/pavaje/autoblocant6_alb.webp",
+                    "price": "58"
+                },
+                {
+                    "name": "antracit",
+                    "image": "/assets/pavaje/autoblocant6_antracit.webp",
+                    "price": "53"
+                },
+                {
+                    "name": "maro",
+                    "image": "/assets/pavaje/autoblocant6_maro.webp",
+                    "price": "53"
+                },
+                {
+                    "name": "roșu",
+                    "image": "/assets/pavaje/autoblocant6_rosu.webp",
+                    "price": "53"
+                }
             ]
         },
         "autoblocant-10cm": {
             "name": "Pavaj autoblocant 10 cm",
-            "image": "/assets/temp/pavaj3.png",
+            "image": "/assets/pavaje/autoblocant6_gri.webp",
             "dimensions": "20 x 16,5 x 10 cm",
             "palettes": "7,54 mp/paleti",
-            "price": "999",
-            "colors": [
-                "gri",
-                "alb",
-                "antracit",
-                "maro",
-                "roșu"
+            "price": "54 - 64",
+             "colors": [
+                {
+                    "name": "gri",
+                    "image": "/assets/pavaje/autoblocant6_gri.webp",
+                    "price": "54"
+                },
+                {
+                    "name": "alb",
+                    "image": "/assets/pavaje/autoblocant6_alb.webp",
+                    "price": "64"
+                },
+                {
+                    "name": "antracit",
+                    "image": "/assets/pavaje/autoblocant6_antracit.webp",
+                    "price": "59"
+                },
+                {
+                    "name": "maro",
+                    "image": "/assets/pavaje/autoblocant6_maro.webp",
+                    "price": "59"
+                },
+                {
+                    "name": "roșu",
+                    "image": "/assets/pavaje/autoblocant6_rosu.webp",
+                    "price": "59"
+                }
             ]
         },
         "pavaj-dreptunghi-6cm": {
             "name": "Pavaj dreptunghi 6 cm",
-            "image": "/assets/temp/pavaj4.png",
+            "image": "/assets/pavaje/dreptunghi_base.webp",
             "dimensions": "10 x 20 x 6 cm",
             "palettes": "9,6 mp/paleti",
-            "price": "819",
-            "colors": [
-                "gri",
-                "alb",
-                "antracit",
-                "maro",
-                "roșu"
+            "price": "40 - 50",
+             "colors": [
+                {
+                    "name": "gri",
+                    "image": "/assets/pavaje/dreptunghi_gri.webp",
+                    "price": "40"
+                },
+                {
+                    "name": "alb",
+                    "image": "/assets/pavaje/dreptunghi_alb.webp",
+                    "price": "50"
+                },
+                {
+                    "name": "antracit",
+                    "image": "/assets/pavaje/dreptunghi_antracit.webp",
+                    "price": "45"
+                },
+                {
+                    "name": "maro",
+                    "image": "/assets/pavaje/dreptunghi_maro.webp",
+                    "price": "45"
+                },
+                {
+                    "name": "roșu",
+                    "image": "/assets/pavaje/dreptunghi_rosu.webp",
+                    "price": "45"
+                }
             ]
         },
         "pavaj-dreptunghi-mic-8cm": {
-            "name": "Pavaj dreptunghi mic 8 cm",
-            "image": "/assets/temp/pavaj5.png",
+            "name": "Pavaj dreptunghi 8 cm",
+            "image": "/assets/pavaje/dreptunghi_base.webp",
             "dimensions": "10 x 20 x 8 cm",
             "palettes": "8,64 mp/paleti",
-            "price": "899",
+            "price": "48 - 58",
             "colors": [
-                "gri",
-                "alb",
-                "antracit",
-                "maro",
-                "roșu"
-            ]
-        },
-        "pavaj-dreptunghi-mare-8cm": {
-            "name": "Pavaj dreptunghi mare 8 cm",
-            "image": "/assets/temp/pavaj1.png",
-            "dimensions": "20 x 30 x 8 cm",
-            "palettes": "8,64 mp/paleti",
-            "price": "999",
-            "colors": [
-                "gri",
-                "alb",
-                "antracit",
-                "maro",
-                "roșu"
+                {
+                    "name": "gri",
+                    "image": "/assets/pavaje/dreptunghi_gri.webp",
+                    "price": "48"
+                },
+                {
+                    "name": "alb",
+                    "image": "/assets/pavaje/dreptunghi_alb.webp",
+                    "price": "58"
+                },
+                {
+                    "name": "antracit",
+                    "image": "/assets/pavaje/dreptunghi_antracit.webp",
+                    "price": "53"
+                },
+                {
+                    "name": "maro",
+                    "image": "/assets/pavaje/dreptunghi_maro.webp",
+                    "price": "53"
+                },
+                {
+                    "name": "roșu",
+                    "image": "/assets/pavaje/dreptunghi_rosu.webp",
+                    "price": "53"
+                }
             ]
         }
     },
-    "pavaje-premium": {
+    "premium-pavaje": {
         "pavaj-aviro-6-mic": {
             "name": "Pavaj Aviro 6 cm - 10 x 20 x 6",
-            "image": "/assets/temp/premium_pavaj.png",
+            "image": "/assets/pavaje/aviro_bazalt.webp",
             "dimensions": "10 x 20 x 6 cm",
             "palettes": "10 seturi/paleti",
-            "price": "1299",
+            "price": "64",
             "colors": [
-                "bazalt",
-                "dune",
-                "mist",
-                "shadow",
-                "sol",
-                "toffee",
-                "tundra"
+                {
+                    "name": "bazalt",
+                    "image": "/assets/pavaje/aviro_bazalt.webp"
+                },
+                {
+                    "name": "dune",
+                    "image": "/assets/pavaje/aviro_dune.webp"
+                },
+                {
+                    "name": "mist",
+                    "image": "/assets/pavaje/aviro_mist.webp"
+                },
+                {
+                    "name": "shadow",
+                    "image": "/assets/pavaje/aviro_shadow.webp"
+                },
+                {
+                    "name": "sol",
+                    "image": "/assets/pavaje/aviro_sol.webp"
+                },
+                {
+                    "name": "toffee",
+                    "image": "/assets/pavaje/aviro_toffee.webp"
+                },
+                {
+                    "name": "tundra",
+                    "image": "/assets/pavaje/aviro_tundra.webp"
+                }
             ]
         },
         "pavaj-aviro-6-mediu": {
             "name": "Pavaj Aviro 6 cm - 20 x 20 x 6",
-            "image": "/assets/temp/premium_pavaj.png",
+            "image": "/assets/pavaje/aviro_sol.webp",
             "dimensions": "20 x 20 x 6 cm",
             "palettes": "10 seturi/paleti",
-            "price": "1299",
+            "price": "64",
             "colors": [
-                "bazalt",
-                "dune",
-                "mist",
-                "shadow",
-                "sol",
-                "toffee",
-                "tundra"
+                {
+                    "name": "bazalt",
+                    "image": "/assets/pavaje/aviro_bazalt.webp"
+                },
+                {
+                    "name": "dune",
+                    "image": "/assets/pavaje/aviro_dune.webp"
+                },
+                {
+                    "name": "mist",
+                    "image": "/assets/pavaje/aviro_mist.webp"
+                },
+                {
+                    "name": "shadow",
+                    "image": "/assets/pavaje/aviro_shadow.webp"
+                },
+                {
+                    "name": "sol",
+                    "image": "/assets/pavaje/aviro_sol.webp"
+                },
+                {
+                    "name": "toffee",
+                    "image": "/assets/pavaje/aviro_toffee.webp"
+                },
+                {
+                    "name": "tundra",
+                    "image": "/assets/pavaje/aviro_tundra.webp"
+                }
             ]
         },
         "pavaj-aviro-6-mare": {
             "name": "Pavaj Aviro 6 cm - 20 x 30 x 6",
-            "image": "/assets/temp/premium_pavaj.png",
+            "image": "/assets/pavaje/aviro_tundra.webp",
             "dimensions": "20 x 30 x 6 cm",
             "palettes": "10 seturi/paleti",
-            "price": "1299",
+            "price": "64",
             "colors": [
-                "bazalt",
-                "dune",
-                "mist",
-                "shadow",
-                "sol",
-                "toffee",
-                "tundra"
+                {
+                    "name": "bazalt",
+                    "image": "/assets/pavaje/aviro_bazalt.webp"
+                },
+                {
+                    "name": "dune",
+                    "image": "/assets/pavaje/aviro_dune.webp"
+                },
+                {
+                    "name": "mist",
+                    "image": "/assets/pavaje/aviro_mist.webp"
+                },
+                {
+                    "name": "shadow",
+                    "image": "/assets/pavaje/aviro_shadow.webp"
+                },
+                {
+                    "name": "sol",
+                    "image": "/assets/pavaje/aviro_sol.webp"
+                },
+                {
+                    "name": "toffee",
+                    "image": "/assets/pavaje/aviro_toffee.webp"
+                },
+                {
+                    "name": "tundra",
+                    "image": "/assets/pavaje/aviro_tundra.webp"
+                }
+            ]
+        },
+        "pavaj-semmelrock-autoblocant-6": {
+            "name": "Pavaj Semmelrock autoblocant 6 cm",
+            "image": "/assets/pavaje/autoblocant_6.webp",
+            "dimensions": "6 cm",
+            "palettes": "1 mp",
+            "price": "55,50",
+            "colors": [
+                {
+                    "name": "gri"
+                }
+            ]
+        },
+        "pavaj-semmelrock-autoblocant-8": {
+            "name": "Pavaj Semmelrock autoblocant 8 cm",
+            "image": "/assets/pavaje/autoblocant_6.webp",
+            "dimensions": "8 cm",
+            "palettes": "1 mp",
+            "price": "66",
+            "colors": [
+                {
+                    "name": "gri"
+                }
+            ]
+        },
+        "pavaj-nardo": {
+            "name": "Pavaj Semmelrock Nardo",
+            "image": "/assets/pavaje/nardo.webp",
+            "dimensions": "10 x 20 x 4 cm",
+            "palettes": "1 mp",
+            "price": "41",
+            "colors": [
+                {
+                    "name": "gri"
+                }
+            ]
+        },
+        "pavaj-rettango-6cm-gri": {
+            "name": "Pavaj Semmelrock Rettango 6 cm Gri",
+            "image": "/assets/pavaje/rettango.webp",
+            "dimensions": "10 x 20 x 6 cm",
+            "palettes": "1 mp",
+            "price": "52",
+            "colors": [
+                {
+                    "name": "gri"
+                }
+            ]
+        },
+        "pavaj-rettango-8cm-gri": {
+            "name": "Pavaj Semmelrock Rettango 8 cm",
+            "image": "/assets/pavaje/rettango.webp",
+            "dimensions": "10 x 20 x 8 cm",
+            "palettes": "1 mp",
+            "price": "62,50",
+            "colors": [
+                {
+                    "name": "gri"
+                }
+            ]
+        },
+        "pavaj-rettango-6cm-negru": {
+            "name": "Pavaj Semmelrock Rettango 6 cm Negru",
+            "image": "/assets/pavaje/rettango_black.webp",
+            "dimensions": "10 x 20 x 6 cm",
+            "palettes": "1 mp",
+            "price": "60",
+            "colors": [
+                {
+                    "name": "negru"
+                }
             ]
         }
     },
@@ -143,14 +364,30 @@
             "palettes": "80 buc/paleti",
             "price": "1299",
             "colors": [
-                "gri",
-                "bazalt",
-                "dune",
-                "mist",
-                "shadow",
-                "sol",
-                "toffee",
-                "tundra"
+                {
+                    "name": "gri"
+                },
+                {
+                    "name": "bazalt"
+                },
+                {
+                    "name": "dune"
+                },
+                {
+                    "name": "mist"
+                },
+                {
+                    "name": "shadow"
+                },
+                {
+                    "name": "sol"
+                },
+                {
+                    "name": "toffee"
+                },
+                {
+                    "name": "tundra"
+                }
             ]
         },
         "bordura-mediu": {
