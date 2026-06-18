@@ -279,7 +279,7 @@ class CheckoutCart extends HTMLElement {
                             orderDate: new Date().toLocaleString('ro-RO')
                         }
 
-                        const gasURL = "https://script.google.com/macros/s/AKfycbw8ta8cJ-sXYvHtpZc2iM5ySB5B9oQBDXs-3mrznb3x-nhLiJS-BnPv4uIQ0bBu8wAV/exec";
+                        const gasURL = "https://script.google.com/macros/s/AKfycbyWvZM91oMvA1QDp2aRviZ3FirbJFMpgyxZ6Psbx2hoeeKP8zxixZRLztGTpqKDwZip/exec";
                         document.getElementById('final-btn').disabled = true;
 
                         fetch(gasURL, {
