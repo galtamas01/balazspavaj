@@ -4,7 +4,6 @@
             "name": "Pavaj autoblocant 6 cm",
             "image": "/assets/pavaje/autoblocant6_gri.webp",
             "dimensions": "20 x 16,5 x 6 cm",
-            "palettes": "11,31 mp/paleti",
             "price": "40 - 50",
             "colors": [
                 {
@@ -32,15 +31,15 @@
                     "image": "/assets/pavaje/autoblocant6_rosu.webp",
                     "price": "45"
                 }
-            ]
+            ],
+            "unit": "mp"
         },
         "autoblocant-8cm": {
             "name": "Pavaj autoblocant 8 cm",
             "image": "/assets/pavaje/autoblocant6_maro.webp",
             "dimensions": "20 x 16,5 x 8 cm",
-            "palettes": "9,43 mp/paleti",
             "price": "48 - 58",
-             "colors": [
+            "colors": [
                 {
                     "name": "gri",
                     "image": "/assets/pavaje/autoblocant6_gri.webp",
@@ -66,15 +65,15 @@
                     "image": "/assets/pavaje/autoblocant6_rosu.webp",
                     "price": "53"
                 }
-            ]
+            ],
+            "unit": "mp"
         },
         "autoblocant-10cm": {
             "name": "Pavaj autoblocant 10 cm",
             "image": "/assets/pavaje/autoblocant6_gri.webp",
             "dimensions": "20 x 16,5 x 10 cm",
-            "palettes": "7,54 mp/paleti",
             "price": "54 - 64",
-             "colors": [
+            "colors": [
                 {
                     "name": "gri",
                     "image": "/assets/pavaje/autoblocant6_gri.webp",
@@ -100,15 +99,15 @@
                     "image": "/assets/pavaje/autoblocant6_rosu.webp",
                     "price": "59"
                 }
-            ]
+            ],
+            "unit": "mp"
         },
         "pavaj-dreptunghi-6cm": {
             "name": "Pavaj dreptunghi 6 cm",
             "image": "/assets/pavaje/dreptunghi_base.webp",
             "dimensions": "10 x 20 x 6 cm",
-            "palettes": "9,6 mp/paleti",
             "price": "40 - 50",
-             "colors": [
+            "colors": [
                 {
                     "name": "gri",
                     "image": "/assets/pavaje/dreptunghi_gri.webp",
@@ -134,13 +133,13 @@
                     "image": "/assets/pavaje/dreptunghi_rosu.webp",
                     "price": "45"
                 }
-            ]
+            ],
+            "unit": "mp"
         },
         "pavaj-dreptunghi-mic-8cm": {
             "name": "Pavaj dreptunghi 8 cm",
             "image": "/assets/pavaje/dreptunghi_base.webp",
             "dimensions": "10 x 20 x 8 cm",
-            "palettes": "8,64 mp/paleti",
             "price": "48 - 58",
             "colors": [
                 {
@@ -168,7 +167,8 @@
                     "image": "/assets/pavaje/dreptunghi_rosu.webp",
                     "price": "53"
                 }
-            ]
+            ],
+            "unit": "mp"
         }
     },
     "premium-pavaje": {
@@ -176,7 +176,6 @@
             "name": "Pavaj Aviro 6 cm - 10 x 20 x 6",
             "image": "/assets/pavaje/aviro_bazalt.webp",
             "dimensions": "10 x 20 x 6 cm",
-            "palettes": "10 seturi/paleti",
             "price": "64",
             "colors": [
                 {
@@ -207,13 +206,13 @@
                     "name": "tundra",
                     "image": "/assets/pavaje/aviro_tundra.webp"
                 }
-            ]
+            ],
+            "unit": "mp"
         },
         "pavaj-aviro-6-mediu": {
             "name": "Pavaj Aviro 6 cm - 20 x 20 x 6",
             "image": "/assets/pavaje/aviro_sol.webp",
             "dimensions": "20 x 20 x 6 cm",
-            "palettes": "10 seturi/paleti",
             "price": "64",
             "colors": [
                 {
@@ -244,13 +243,13 @@
                     "name": "tundra",
                     "image": "/assets/pavaje/aviro_tundra.webp"
                 }
-            ]
+            ],
+            "unit": "mp"
         },
         "pavaj-aviro-6-mare": {
             "name": "Pavaj Aviro 6 cm - 20 x 30 x 6",
             "image": "/assets/pavaje/aviro_tundra.webp",
             "dimensions": "20 x 30 x 6 cm",
-            "palettes": "10 seturi/paleti",
             "price": "64",
             "colors": [
                 {
@@ -281,204 +280,202 @@
                     "name": "tundra",
                     "image": "/assets/pavaje/aviro_tundra.webp"
                 }
-            ]
+            ],
+            "unit": "mp"
         },
         "pavaj-semmelrock-autoblocant-6": {
             "name": "Pavaj Semmelrock autoblocant 6 cm",
             "image": "/assets/pavaje/autoblocant_6.webp",
             "dimensions": "6 cm",
-            "palettes": "1 mp",
             "price": "55,50",
             "colors": [
                 {
                     "name": "gri"
                 }
-            ]
+            ],
+            "unit": "mp"
         },
         "pavaj-semmelrock-autoblocant-8": {
             "name": "Pavaj Semmelrock autoblocant 8 cm",
             "image": "/assets/pavaje/autoblocant_6.webp",
             "dimensions": "8 cm",
-            "palettes": "1 mp",
             "price": "66",
             "colors": [
                 {
                     "name": "gri"
                 }
-            ]
+            ],
+            "unit": "mp"
         },
         "pavaj-nardo": {
             "name": "Pavaj Semmelrock Nardo",
             "image": "/assets/pavaje/nardo.webp",
             "dimensions": "10 x 20 x 4 cm",
-            "palettes": "1 mp",
             "price": "41",
             "colors": [
                 {
                     "name": "gri"
                 }
-            ]
+            ],
+            "unit": "mp"
         },
         "pavaj-rettango-6cm-gri": {
             "name": "Pavaj Semmelrock Rettango 6 cm Gri",
             "image": "/assets/pavaje/rettango.webp",
             "dimensions": "10 x 20 x 6 cm",
-            "palettes": "1 mp",
             "price": "52",
             "colors": [
                 {
                     "name": "gri"
                 }
-            ]
+            ],
+            "unit": "mp"
         },
         "pavaj-rettango-8cm-gri": {
             "name": "Pavaj Semmelrock Rettango 8 cm",
             "image": "/assets/pavaje/rettango.webp",
             "dimensions": "10 x 20 x 8 cm",
-            "palettes": "1 mp",
             "price": "62,50",
             "colors": [
                 {
                     "name": "gri"
                 }
-            ]
+            ],
+            "unit": "mp"
         },
         "pavaj-rettango-6cm-negru": {
             "name": "Pavaj Semmelrock Rettango 6 cm Negru",
             "image": "/assets/pavaje/rettango_black.webp",
             "dimensions": "10 x 20 x 6 cm",
-            "palettes": "1 mp",
             "price": "60",
             "colors": [
                 {
                     "name": "negru"
                 }
-            ]
+            ],
+            "unit": "mp"
         }
     },
     "borduri": {
         "bordura-mic": {
             "name": "Bordură - 10 x 15 x 50",
-            "image": "/assets/temp/bordura.png",
+            "image": "/assets/pavaje/bordura_mic.webp",
             "dimensions": "10 x 15 x 50 cm",
-            "palettes": "80 buc/paleti",
-            "price": "1299",
+            "price": "6,5 - 10",
             "colors": [
                 {
-                    "name": "gri"
+                    "name": "gri",
+                    "price": "6,5"
                 },
                 {
-                    "name": "bazalt"
+                    "name": "bazalt",
+                    "price": "10"
                 },
                 {
-                    "name": "dune"
+                    "name": "dune",
+                    "price": "10"
                 },
                 {
-                    "name": "mist"
+                    "name": "mist",
+                    "price": "10"
                 },
                 {
-                    "name": "shadow"
+                    "name": "shadow",
+                    "price": "10"
                 },
                 {
-                    "name": "sol"
+                    "name": "sol",
+                    "price": "10"
                 },
                 {
-                    "name": "toffee"
+                    "name": "toffee",
+                    "price": "10"
                 },
                 {
-                    "name": "tundra"
+                    "name": "tundra",
+                    "price": "10"
                 }
-            ]
+            ],
+            "unit": "buc"
         },
         "bordura-mediu": {
             "name": "Bordură - 15 x 25 x 50",
-            "image": "/assets/temp/bordura.png",
+            "image": "/assets/pavaje/bordura_mare.webp",
             "dimensions": "15 x 25 x 50 cm",
-            "palettes": "30 buc/paleti",
-            "price": "1299"
+            "price": "16",
+            "unit": "buc"
         },
         "bordura-mare": {
             "name": "Bordură - 20 x 25 x 50",
-            "image": "/assets/temp/bordura.png",
+            "image": "/assets/pavaje/bordura_mare.webp",
             "dimensions": "20 x 25 x 50 cm",
-            "palettes": "15 buc/paleti",
-            "price": "1299"
+            "price": "18",
+            "unit": "buc"
         }
     },
     "rigole": {
         "scafa-rigola": {
             "name": "Scafă rigolă",
-            "image": "/assets/temp/rigola1.png",
+            "image": "",
             "dimensions": "30 x 40 x 12 cm",
-            "palettes": "48 buc/paleti",
-            "price": "1299"
+            "price": "16,5",
+            "unit": "buc"
         },
         "rigola-carosabila-65": {
             "name": "Rigolă carosabilă TIP 65 ",
-            "image": "/assets/temp/rigola23.png",
+            "image": "",
             "dimensions": "65 x 60 x 32 cm",
-            "palettes": "4 buc/paleti",
-            "price": "1299"
-        },
-        "rigola-carosabila-75": {
-            "name": "Rigolă carosabilă TIP 75 ",
-            "image": "/assets/temp/rigola23.png",
-            "dimensions": "75 x 75 x 25 cm",
-            "palettes": "3 buc/paleti",
-            "price": "1299"
+            "price": "57",
+            "unit": "buc"
         },
         "capac-rigola-carosabila-49": {
             "name": "Capac rigolă carosabilă TIP 49",
-            "image": "/assets/temp/rigola4.jpg",
+            "image": "",
             "dimensions": "49 x 30 x 15 cm",
-            "palettes": "30 buc/paleti",
             "type": [
-                "nearmat",
-                "simplu armat",
-                "dublu armat"
+                {
+                    "name": "nearmat",
+                    "price": "24"
+                },
+                {
+                    "name": "simplu armat",
+                    "price": "34"
+                },
+                {
+                    "name": "dublu armat",
+                    "price": "39"
+                }
             ],
-            "price": "1299"
+            "price": "24 - 39",
+            "unit": "buc"
         },
         "capac-rigola-carosabila-dreptunghiulara-49": {
             "name": "Capac rigolă carosabilă dreptunghiulară TIP 49",
-            "image": "/assets/temp/rigola4.jpg",
+            "image": "",
             "dimensions": "49 x 30 x 15 cm",
-            "palettes": "30 buc/paleti",
             "type": [
-                "nearmat",
-                "simplu armat",
-                "dublu armat"
+                {
+                    "name": "nearmat",
+                    "price": "29"
+                },
+                {
+                    "name": "simplu armat",
+                    "price": "37"
+                },
+                {
+                    "name": "dublu armat",
+                    "price": "42"
+                }
             ],
-            "price": "1299"
-        },
-        "capac-rigola-carosabila-64": {
-            "name": "Capac rigolă carosabilă TIP 64",
-            "image": "/assets/temp/rigola5.jpeg",
-            "dimensions": "64 x 32 x 15 cm",
-            "palettes": "30 buc/paleti",
-            "type": [
-                "simplu armat",
-                "dublu armat"
-            ],
-            "price": "1299"
-        },
-        "capac-rigola-carosabila-66": {
-            "name": "Capac rigolă carosabilă TIP 66",
-            "image": "/assets/temp/rigola5.jpeg",
-            "dimensions": "66 x 30 x 15 cm",
-            "palettes": "30 buc/paleti",
-            "type": [
-                "simplu armat",
-                "dublu armat"
-            ],
-            "price": "1299"
+            "price": "29 - 42",
+            "unit": "buc"
         },
         "paleti": {
             "name": "Paleți",
-            "image": "/assets/product_placeholder.png",
-            "dimensions": "",
-            "palettes": "",
-            "price": "1299"
+            "image": "",
+            "dimensions": "dimensiuni diferite",
+            "price": "55",
+            "unit": "buc"
         }
     }
 }

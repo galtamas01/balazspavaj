@@ -66,13 +66,22 @@ class ProductDetails extends HTMLElement {
                     `;
                 }
 
+                if (product.type && product.type.length > 0) {
+                    const firstType = product.type[0];
+                    if (typeof firstType === 'object' && firstType.price) {
+                        defaultPrice = firstType.price;
+                    }
+                }
+
                 let typeHtml = '';
                 if (product.type && product.type.length > 0) {
-                    const typeOptions = product.type.map(type =>
-                        `
-                            <option value="${type}">${type}</option>
-                        `
-                    ).join('');
+                    const typeOptions = product.type.map(t => {
+                        const typeName = typeof t === 'object' ? t.name : t;
+                        const typePrice = typeof t === 'object' ? (t.price || '') : '';
+                        return `
+                            <option value="${typeName}" data-price="${typePrice}">${typeName}</option>
+                        `;
+                    }).join('');
 
                     typeHtml = `
                         <div class="type-selector">
@@ -97,14 +106,15 @@ class ProductDetails extends HTMLElement {
                         </div>
                     </header>
 
-                    <main>
+                    <main${defaultImage ? '' : ' class="no-image"'}>
+                        ${defaultImage ? `
                         <section class="product-image-section">
                             <img src="${defaultImage}" alt="Product image">
-                        </section>
+                        </section>` : ''}
                         <section class="product-info-section">
                             <header class="info-header">
                                 <h1 class="subtitle">${product.name}</h1>
-                                <p class="price">${defaultPrice} RON / paleta</p>
+                                <p class="price">${defaultPrice} RON / ${product.unit}</p>
                                 <div class="line"></div>
                             </header>
 
@@ -117,13 +127,13 @@ class ProductDetails extends HTMLElement {
                                     <p class="detail-value">${product.dimensions}</p>
                                 </div>
                                 <div class="detail">
-                                    <p class="detail-header">Paleti</p>
-                                    <p class="detail-value">${product.palettes}</p>
+                                    <p class="detail-header">Unitate</p>
+                                    <p class="detail-value">${product.unit}</p>
                                 </div>
                             </div>
 
                             <div class="quantity-container">
-                                <label for="quantity">Cantitate (paleti)</label>
+                                <label for="quantity">Cantitate (${product.unit})</label>
                                 <div class="quantity-input-container">
                                     <input type="number" name="quantity" id="quantity" value="1" min="1" max="99" required>
                                     <button class="menu-button">Adaugă în coș</button>
@@ -154,10 +164,29 @@ class ProductDetails extends HTMLElement {
 
                         const priceElement = this.querySelector('.price');
                         if (priceElement) {
-                            priceElement.textContent = `${colorPrice || product.price} RON / paleta`;
+                            priceElement.textContent = `${colorPrice || product.price} RON / ${product.unit}`;
                         }
                     });
                 })
+
+                const typeSelectElement = this.querySelector('#type');
+                if (typeSelectElement) {
+                    typeSelectElement.addEventListener('change', () => {
+                        const selectedOption = typeSelectElement.options[typeSelectElement.selectedIndex];
+                        const typePrice = selectedOption.getAttribute('data-price');
+
+                        let priceToDisplay = typePrice;
+                        if (!priceToDisplay) {
+                            const activeSwatch = this.querySelector('.color-swatch.active');
+                            priceToDisplay = activeSwatch ? activeSwatch.getAttribute('data-price') : null;
+                        }
+
+                        const priceElement = this.querySelector('.price');
+                        if (priceElement) {
+                            priceElement.textContent = `${priceToDisplay || product.price} RON / ${product.unit}`;
+                        }
+                    });
+                }
 
                 const addToCartBtn = this.querySelector('.quantity-container .menu-button');
                 const quantityInput = this.querySelector('#quantity');
@@ -171,7 +200,18 @@ class ProductDetails extends HTMLElement {
                         const activeSwatch = this.querySelector('.color-swatch.active');
                         const selectedColor = activeSwatch ? activeSwatch.getAttribute('data-color') : null;
                         const selectedImage = activeSwatch ? (activeSwatch.getAttribute('data-image') || product.image) : product.image;
-                        const selectedPrice = activeSwatch ? (activeSwatch.getAttribute('data-price') || product.price) : product.price;
+                        
+                        let selectedPrice = null;
+                        if (typeSelect) {
+                            const selectedOption = typeSelect.options[typeSelect.selectedIndex];
+                            selectedPrice = selectedOption.getAttribute('data-price');
+                        }
+                        if (!selectedPrice && activeSwatch) {
+                            selectedPrice = activeSwatch.getAttribute('data-price');
+                        }
+                        if (!selectedPrice) {
+                            selectedPrice = product.price;
+                        }
 
                         const cartItem = {
                             id: productId,
@@ -180,7 +220,8 @@ class ProductDetails extends HTMLElement {
                             image: selectedImage,
                             quantity: selectedQuantity,
                             color: selectedColor,
-                            type: selectedType
+                            type: selectedType,
+                            unit: product.unit
                         };
 
                         let cart = JSON.parse(localStorage.getItem('shoppingCart')) || [];

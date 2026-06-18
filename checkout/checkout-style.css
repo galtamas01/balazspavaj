@@ -170,6 +170,7 @@ hgroup p {
     height: 20vh;
     border-radius: 10px;
     overflow: hidden;
+    background-color: var(--custom-grey-transparent);
 }
 
 .cart-item-image img {
@@ -505,7 +506,8 @@ p.lighter a:hover {
 
     .cart-item-image {
        width: 30%;
-       height: 30%;
+       height: auto;
+       aspect-ratio: 4 / 3;
     }
 
     .cart-item-image img {

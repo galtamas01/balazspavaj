@@ -73,16 +73,19 @@ class ProductsGrid extends HTMLElement {
                     const card = document.createElement('div');
                     card.classList.add('product-card');
 
-                    card.innerHTML = `
+                    const imageHtml = product.image ? `
                         <div class="product-card-image">
                             <img src="${product.image}" alt="Product image">
-                        </div>
+                        </div>` : '';
+
+                    card.innerHTML = `
+                        ${imageHtml}
                         <div class="product-card-text">
                             <h3>${product.name}</h3>
                             <span class="line"></span>
                             <div class="product-details">
                                 <div class="product-details-left">
-                                    <span>${product.palettes}</span>
+                                    <span>Preț per ${product.unit}</span>
                                     <span>${product.price} RON</span>
                                 </div>
                                 <div class="product-details-right">

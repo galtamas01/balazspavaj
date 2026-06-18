@@ -39,16 +39,20 @@ class CheckoutCart extends HTMLElement {
             if (item.color) detailsHTML += `<p>Culoare: ${item.color}</p>`;
             if (item.type) detailsHTML += `<p>Tip: ${item.type}</p>`;
 
+            const itemUnit = item.unit || 'paleti';
+
+            const imageHTML = item.image ? `<img src="${item.image}" alt="${item.name}">` : '';
+
             cartItemsHTML += `
                 <div class="cart-item">
                     <div class="cart-item-image">
-                        <img src="${item.image}" alt="${item.name}">
+                        ${imageHTML}
                     </div>
                     <div class="cart-item-text">
                         <button class="delete" data-index="${index}"><span class="material-symbols-outlined">delete</span></button>
                         <h3>${item.name}</h3>
                         ${detailsHTML}
-                        <p>Cantitate: ${item.quantity} paleti</p>
+                        <p>Cantitate: ${item.quantity} ${itemUnit}</p>
                     </div>
                 </div>
             `;
@@ -275,7 +279,7 @@ class CheckoutCart extends HTMLElement {
                             orderDate: new Date().toLocaleString('ro-RO')
                         }
 
-                        const gasURL = "https://script.google.com/macros/s/AKfycbwZ1hYoPHPN8UAKvH4hXqfnh0ezKn9WmC9NZVYs90lTstpLpQQoWmrOjkTZUpS5JKqlGg/exec";
+                        const gasURL = "https://script.google.com/macros/s/AKfycbwAL5C4L23aBKe59Fc0wnqmeztctg-yynFMCFuZ7Y033jB9UuBaKUJxdwMIgfzIGpsZ/exec";
                         document.getElementById('final-btn').disabled = true;
 
                         fetch(gasURL, {
