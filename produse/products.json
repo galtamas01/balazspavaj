@@ -172,11 +172,28 @@
         }
     },
     "premium-pavaje": {
-        "pavaj-aviro-6-mic": {
-            "name": "Pavaj Aviro 6 cm - 10 x 20 x 6",
+        "pavaj-aviro-6": {
+            "name": "Pavaj Aviro 6 cm",
             "image": "/assets/pavaje/aviro_bazalt.webp",
-            "dimensions": "10 x 20 x 6 cm",
             "price": "64",
+            "unit": "mp",
+            "sizes": [
+                {
+                    "name": "Mic",
+                    "dimensions": "10 x 20 x 6 cm",
+                    "image": "/assets/pavaje/aviro_bazalt.webp"
+                },
+                {
+                    "name": "Mediu",
+                    "dimensions": "20 x 20 x 6 cm",
+                    "image": "/assets/pavaje/aviro_sol.webp"
+                },
+                {
+                    "name": "Mare",
+                    "dimensions": "20 x 30 x 6 cm",
+                    "image": "/assets/pavaje/aviro_tundra.webp"
+                }
+            ],
             "colors": [
                 {
                     "name": "bazalt",
@@ -206,82 +223,7 @@
                     "name": "tundra",
                     "image": "/assets/pavaje/aviro_tundra.webp"
                 }
-            ],
-            "unit": "mp"
-        },
-        "pavaj-aviro-6-mediu": {
-            "name": "Pavaj Aviro 6 cm - 20 x 20 x 6",
-            "image": "/assets/pavaje/aviro_sol.webp",
-            "dimensions": "20 x 20 x 6 cm",
-            "price": "64",
-            "colors": [
-                {
-                    "name": "bazalt",
-                    "image": "/assets/pavaje/aviro_bazalt.webp"
-                },
-                {
-                    "name": "dune",
-                    "image": "/assets/pavaje/aviro_dune.webp"
-                },
-                {
-                    "name": "mist",
-                    "image": "/assets/pavaje/aviro_mist.webp"
-                },
-                {
-                    "name": "shadow",
-                    "image": "/assets/pavaje/aviro_shadow.webp"
-                },
-                {
-                    "name": "sol",
-                    "image": "/assets/pavaje/aviro_sol.webp"
-                },
-                {
-                    "name": "toffee",
-                    "image": "/assets/pavaje/aviro_toffee.webp"
-                },
-                {
-                    "name": "tundra",
-                    "image": "/assets/pavaje/aviro_tundra.webp"
-                }
-            ],
-            "unit": "mp"
-        },
-        "pavaj-aviro-6-mare": {
-            "name": "Pavaj Aviro 6 cm - 20 x 30 x 6",
-            "image": "/assets/pavaje/aviro_tundra.webp",
-            "dimensions": "20 x 30 x 6 cm",
-            "price": "64",
-            "colors": [
-                {
-                    "name": "bazalt",
-                    "image": "/assets/pavaje/aviro_bazalt.webp"
-                },
-                {
-                    "name": "dune",
-                    "image": "/assets/pavaje/aviro_dune.webp"
-                },
-                {
-                    "name": "mist",
-                    "image": "/assets/pavaje/aviro_mist.webp"
-                },
-                {
-                    "name": "shadow",
-                    "image": "/assets/pavaje/aviro_shadow.webp"
-                },
-                {
-                    "name": "sol",
-                    "image": "/assets/pavaje/aviro_sol.webp"
-                },
-                {
-                    "name": "toffee",
-                    "image": "/assets/pavaje/aviro_toffee.webp"
-                },
-                {
-                    "name": "tundra",
-                    "image": "/assets/pavaje/aviro_tundra.webp"
-                }
-            ],
-            "unit": "mp"
+            ]
         },
         "pavaj-semmelrock-autoblocant-6": {
             "name": "Pavaj Semmelrock autoblocant 6 cm",

@@ -27,6 +27,13 @@ class ProductDetails extends HTMLElement {
                 let colorHtml = '';
                 let defaultImage = product.image;
                 let defaultPrice = product.price;
+                let defaultDimensions = product.dimensions;
+
+                if (product.sizes && product.sizes.length > 0) {
+                    const firstSize = product.sizes[0];
+                    defaultDimensions = firstSize.dimensions;
+                    if (firstSize.image) defaultImage = firstSize.image;
+                }
 
                 if (product.colors && product.colors.length > 0) {
                     const firstColor = product.colors[0];
@@ -62,6 +69,26 @@ class ProductDetails extends HTMLElement {
                             <div class="color-options">
                                 ${colorButtons}
                             </div>
+                        </div>
+                    `;
+                }
+
+                let sizeHtml = '';
+                if (product.sizes && product.sizes.length > 0) {
+                    const sizeOptions = product.sizes.map((s, index) => {
+                        return `
+                            <option value="${s.name}" data-dimensions="${s.dimensions}" data-image="${s.image || ''}">${s.name} (${s.dimensions})</option>
+                        `;
+                    }).join('');
+
+                    sizeHtml = `
+                        <div class="type-selector" style="margin-bottom: 2rem;">
+                            <header class="color-header">
+                                <p>Dimensiune</p>
+                            </header>
+                            <select name="size" id="size">
+                                ${sizeOptions}
+                            </select>
                         </div>
                     `;
                 }
@@ -119,12 +146,13 @@ class ProductDetails extends HTMLElement {
                             </header>
 
                             ${colorHtml}
+                            ${sizeHtml}
                             ${typeHtml}
 
                             <div class="details-container">
                                 <div class="detail">
                                     <p class="detail-header">Dimensiuni</p>
-                                    <p class="detail-value">${product.dimensions}</p>
+                                    <p class="detail-value" id="dimensions-display">${defaultDimensions || ''}</p>
                                 </div>
                                 <div class="detail">
                                     <p class="detail-header">Unitate</p>
@@ -159,7 +187,15 @@ class ProductDetails extends HTMLElement {
 
                         const imgElement = this.querySelector('.product-image-section img');
                         if (imgElement) {
-                            imgElement.src = colorImage || product.image;
+                            let fallbackImage = product.image;
+                            const sizeSelect = this.querySelector('#size');
+                            if (sizeSelect && product.sizes) {
+                                const selectedSizeObj = product.sizes.find(s => s.name === sizeSelect.value);
+                                if (selectedSizeObj && selectedSizeObj.image) {
+                                    fallbackImage = selectedSizeObj.image;
+                                }
+                            }
+                            imgElement.src = colorImage || fallbackImage;
                         }
 
                         const priceElement = this.querySelector('.price');
@@ -168,6 +204,30 @@ class ProductDetails extends HTMLElement {
                         }
                     });
                 })
+
+                const sizeSelectElement = this.querySelector('#size');
+                if (sizeSelectElement) {
+                    sizeSelectElement.addEventListener('change', () => {
+                        const selectedOption = sizeSelectElement.options[sizeSelectElement.selectedIndex];
+                        const sizeDimensions = selectedOption.getAttribute('data-dimensions');
+                        const sizeImage = selectedOption.getAttribute('data-image');
+
+                        // Update dimensions text
+                        const dimsDisplay = this.querySelector('#dimensions-display');
+                        if (dimsDisplay) {
+                            dimsDisplay.textContent = sizeDimensions;
+                        }
+
+                        // Update image if no color swatch is active
+                        const activeSwatch = this.querySelector('.color-swatch.active');
+                        if (!activeSwatch && sizeImage) {
+                            const imgElement = this.querySelector('.product-image-section img');
+                            if (imgElement) {
+                                imgElement.src = sizeImage;
+                            }
+                        }
+                    });
+                }
 
                 const typeSelectElement = this.querySelector('#type');
                 if (typeSelectElement) {
@@ -191,15 +251,26 @@ class ProductDetails extends HTMLElement {
                 const addToCartBtn = this.querySelector('.quantity-container .menu-button');
                 const quantityInput = this.querySelector('#quantity');
                 const typeSelect = this.querySelector('#type');
+                const sizeSelect = this.querySelector('#size');
 
                 if (addToCartBtn) {
                     addToCartBtn.addEventListener('click', () => {
                         const selectedQuantity = parseInt(quantityInput.value) || 1;
                         const selectedType = typeSelect ? typeSelect.value : null;
+                        const selectedSizeName = sizeSelect ? sizeSelect.value : null;
 
                         const activeSwatch = this.querySelector('.color-swatch.active');
                         const selectedColor = activeSwatch ? activeSwatch.getAttribute('data-color') : null;
-                        const selectedImage = activeSwatch ? (activeSwatch.getAttribute('data-image') || product.image) : product.image;
+                        
+                        let fallbackImage = product.image;
+                        let selectedSizeObj = null;
+                        if (sizeSelect && product.sizes) {
+                            selectedSizeObj = product.sizes.find(s => s.name === selectedSizeName);
+                            if (selectedSizeObj && selectedSizeObj.image) {
+                                fallbackImage = selectedSizeObj.image;
+                            }
+                        }
+                        const selectedImage = activeSwatch ? (activeSwatch.getAttribute('data-image') || fallbackImage) : fallbackImage;
                         
                         let selectedPrice = null;
                         if (typeSelect) {
@@ -221,6 +292,8 @@ class ProductDetails extends HTMLElement {
                             quantity: selectedQuantity,
                             color: selectedColor,
                             type: selectedType,
+                            size: selectedSizeName,
+                            dimensions: selectedSizeObj ? selectedSizeObj.dimensions : null,
                             unit: product.unit
                         };
 
@@ -229,7 +302,8 @@ class ProductDetails extends HTMLElement {
                         const existingItemIndex = cart.findIndex(item =>
                             item.id === cartItem.id &&
                             item.color === cartItem.color &&
-                            item.type === cartItem.type
+                            item.type === cartItem.type &&
+                            item.size === cartItem.size
                         );
 
                         if (existingItemIndex > -1) {

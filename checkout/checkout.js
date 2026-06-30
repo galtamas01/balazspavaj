@@ -37,6 +37,13 @@ class CheckoutCart extends HTMLElement {
 
             let detailsHTML = '';
             if (item.color) detailsHTML += `<p>Culoare: ${item.color}</p>`;
+            if (item.size) {
+                if (item.dimensions) {
+                    detailsHTML += `<p>Dimensiune: ${item.size} (${item.dimensions})</p>`;
+                } else {
+                    detailsHTML += `<p>Dimensiune: ${item.size}</p>`;
+                }
+            }
             if (item.type) detailsHTML += `<p>Tip: ${item.type}</p>`;
 
             const itemUnit = item.unit || 'paleti';
@@ -270,11 +277,19 @@ class CheckoutCart extends HTMLElement {
                         const formData = new FormData(deliveryForm);
                         const customerData = Object.fromEntries(formData.entries());
 
-                        const currentCart = JSON.parse(localStorage.getItem('shoppingCart'));
+                        const currentCart = JSON.parse(localStorage.getItem('shoppingCart')) || [];
+
+                        const itemsForPayload = currentCart.map(item => {
+                            const payloadItem = { ...item };
+                            if (item.dimensions) {
+                                payloadItem.name = `${item.name} - ${item.dimensions}`;
+                            }
+                            return payloadItem;
+                        });
 
                         const orderPayload = {
                             customer: customerData,
-                            items: currentCart,
+                            items: itemsForPayload,
                             total: formattedSubtotal,
                             orderDate: new Date().toLocaleString('ro-RO')
                         }
