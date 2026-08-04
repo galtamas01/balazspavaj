@@ -314,7 +314,6 @@ class ProductDetails extends HTMLElement {
 
                         localStorage.setItem('shoppingCart', JSON.stringify(cart));
 
-                        // Create and show the popup modal
                         const modalOverlay = document.createElement('div');
                         modalOverlay.className = 'cart-modal-overlay';
                         
@@ -336,12 +335,10 @@ class ProductDetails extends HTMLElement {
 
                         document.body.appendChild(modalOverlay);
 
-                        // Trigger scale/fade animation
                         setTimeout(() => {
                             modalOverlay.classList.add('active');
                         }, 10);
 
-                        // Helper function to dismiss the modal
                         const dismissModal = () => {
                             if (modalOverlay.parentNode) {
                                 modalOverlay.classList.remove('active');
@@ -353,16 +350,13 @@ class ProductDetails extends HTMLElement {
                             }
                         };
 
-                        // Auto-dismiss after 5 seconds
                         const dismissTimeout = setTimeout(dismissModal, 5000);
 
-                        // Close overlay when clicking "Continuă cumpărăturile"
                         modalOverlay.querySelector('#btn-continue').addEventListener('click', () => {
                             clearTimeout(dismissTimeout);
                             dismissModal();
                         });
 
-                        // Close overlay when clicking outside the modal
                         modalOverlay.addEventListener('click', (e) => {
                             if (e.target === modalOverlay) {
                                 clearTimeout(dismissTimeout);
