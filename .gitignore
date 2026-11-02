@@ -22,3 +22,8 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+
+# CMS / Netlify
+.env
+.env.*
+.netlify
