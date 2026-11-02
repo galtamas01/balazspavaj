@@ -14,9 +14,13 @@ Netlify: *Site configuration → Environment variables*. A titkokat soha ne tedd
 |---|---|---|
 | `ADMIN_PASSWORD_HASH` | az admin jelszó hash-e | `npm run hash-password` |
 | `SESSION_SECRET` | a munkamenet-süti aláírása (min. 32 karakter) | ugyanez a script kiír egy újat |
-| `GITHUB_TOKEN` | a termékadatok mentéséhez (a következő fázisban kell) | GitHub fine-grained token, csak ehhez a repóhoz, *Contents: Read and write* |
+| `GITHUB_TOKEN` | a katalógus olvasásához és mentéséhez | GitHub fine-grained token, csak ehhez a repóhoz, *Contents: Read and write* (a *Metadata: Read* magától jön) |
 
 Jelszócsere: `npm run hash-password`, majd az új `ADMIN_PASSWORD_HASH` beírása a Netlify-on és egy új deploy (*Deploys → Trigger deploy*). A `SESSION_SECRET` cseréje minden bejelentkezett felhasználót kiléptet.
+
+Opcionális felülírások (az alapértékek ehhez a repóhoz valók): `GITHUB_OWNER`, `GITHUB_REPO`, `MAIN_BRANCH` (`main`), `DRAFT_BRANCH` (`cms-draft`), `PRODUCTS_PATH`, `COLORS_PATH`, `ASSETS_DIR`.
+
+A token lejár (legfeljebb 1 év): lejárata után a CMS mentése leáll, ilyenkor új tokent kell létrehozni és a Netlify-on kicserélni.
 
 ### Netlify beállítások
 

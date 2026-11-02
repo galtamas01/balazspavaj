@@ -1,10 +1,11 @@
 import { LABELS } from '/admin/lib/labels.js';
 
 export class ApiError extends Error {
-  constructor(code, message, status) {
+  constructor(code, message, status, details = null) {
     super(message);
     this.code = code;
     this.status = status;
+    this.details = details; // pl. a mentés mezőnkénti hibái: details.errors
   }
 }
 
@@ -31,7 +32,7 @@ export async function api(name, { method = 'GET', body } = {}) {
   }
 
   if (!response.ok) {
-    throw new ApiError(data?.code || `HTTP_${response.status}`, data?.message || LABELS.errors.GENERIC, response.status);
+    throw new ApiError(data?.code || `HTTP_${response.status}`, data?.message || LABELS.errors.GENERIC, response.status, data);
   }
   return data;
 }
