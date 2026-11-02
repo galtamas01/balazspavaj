@@ -2,7 +2,7 @@ import { CATEGORIES } from '../../src/shared/catalog-schema.js';
 
 export const DEFAULT_HASH = `#/termekek/${CATEGORIES[0]}`;
 
-// Hash-útvonalak: #/termekek[/<kategória>], #/termek/<kategória>/<azonosító>, #/uj/<kategória>[/<másolandó azonosító>].
+// Hash-útvonalak: #/szinek, #/termekek[/<kategória>], #/termek/<kategória>/<azonosító>, #/uj/<kategória>[/<másolandó azonosító>].
 // Ismeretlen útvonalra null.
 export function parseRoute(hash) {
   let parts;
@@ -12,6 +12,7 @@ export function parseRoute(hash) {
     return null;
   }
   const [name, category, id] = parts;
+  if (name === 'szinek' && parts.length === 1) return { name: 'palette' };
   if (name === 'termekek' && parts.length <= 2 && (parts.length === 1 || CATEGORIES.includes(category))) {
     return { name: 'list', category: category ?? CATEGORIES[0] };
   }

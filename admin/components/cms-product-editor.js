@@ -165,7 +165,7 @@ class CmsProductEditor extends HTMLElement {
 
             <section class="cms-section">
               <h2 class="cms-section-title">${escapeHtml(T.sections.colors)}</h2>
-              <p class="cms-muted">${escapeHtml(T.colorsIntro)}</p>
+              <p class="cms-muted">${escapeHtml(T.colorsIntro)} <a href="#/szinek">${escapeHtml(T.colorsManage)}</a></p>
               <cms-repeater id="cms-colors"></cms-repeater>
               <button type="button" class="cms-link-button" id="cms-clear-color-prices" hidden>${escapeHtml(T.colorsClearPrices)}</button>
               <p class="cms-field-error" data-error-for="colors" hidden></p>

@@ -49,22 +49,22 @@ export function createStore(api) {
     }
   }
 
-  // Egy módosítás mentése a piszkozatra. `apply(products)` az aktuális piszkozaton számolja ki az új katalógust,
-  // ezért ha közben máshol is mentettek (409), a módosítás az újratöltött adaton megismételhető.
-  // `uploads`: [{ path, base64 }] – az új képek, ugyanabban a commitban mentődnek.
+  // Egy módosítás mentése a piszkozatra. `apply(draft)` az aktuális piszkozaton ({ products, colors }) számolja ki
+  // az újat és { products, colors }-t ad vissza; ezért ha közben máshol is mentettek (409), a módosítás az
+  // újratöltött adaton megismételhető. `uploads`: [{ path, base64 }] – az új képek, ugyanabban a commitban mentődnek.
   // Visszaad: { warnings, changed }.
-  async function save({ apply, message, uploads = [] }) {
+  async function commit({ apply, message, uploads = [] }) {
     if (state.busy) throw new ChangeError('Egy másik mentés még folyamatban van.');
     set({ busy: true });
     try {
       for (let attempt = 0; ; attempt += 1) {
-        const products = apply(state.draft.products);
+        const { products, colors } = apply(state.draft);
         try {
           const result = await api('save', {
             method: 'POST',
-            body: { baseSha: state.draftSha, products, colors: state.draft.colors, uploads, message },
+            body: { baseSha: state.draftSha, products, colors, uploads, message },
           });
-          set({ draft: { products, colors: state.draft.colors }, draftSha: result.draftSha });
+          set({ draft: { products, colors }, draftSha: result.draftSha });
           return { warnings: result.warnings || [], changed: Boolean(result.changed) };
         } catch (error) {
           if (error.status === 409 && attempt === 0) {
@@ -80,9 +80,16 @@ export function createStore(api) {
     }
   }
 
+  // Csak a termékek módosítása: `apply(products)` → új products (a paletta változatlan).
+  const save = ({ apply, message, uploads = [] }) =>
+    commit({ apply: (draft) => ({ products: apply(draft.products), colors: draft.colors }), message, uploads });
+
+  // A paletta (és szükség esetén a termékek) módosítása: `apply({ products, colors })` → { products, colors }.
+  const saveCatalog = ({ apply, message }) => commit({ apply, message });
+
   const setDirty = (dirty) => {
     if (state.dirty !== dirty) set({ dirty });
   };
 
-  return { get, set, subscribe, load, save, setDirty };
+  return { get, set, subscribe, load, save, saveCatalog, setDirty };
 }

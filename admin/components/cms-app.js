@@ -8,6 +8,7 @@ import { parseRoute, DEFAULT_HASH } from '/admin/lib/router.js';
 import '/admin/components/cms-toast.js';
 import '/admin/components/cms-product-list.js';
 import '/admin/components/cms-product-editor.js';
+import '/admin/components/cms-color-palette.js';
 
 // Az admin felület kerete: munkamenet, belépő képernyő, fejléc, állapotsor és az útvonalak.
 class CmsApp extends HTMLElement {
@@ -76,7 +77,8 @@ class CmsApp extends HTMLElement {
             <span>${escapeHtml(LABELS.appTitle)}</span>
           </div>
           <div class="cms-menu">
-            <a class="cms-menu-link" href="#/termekek">${escapeHtml(t.nav.products)}</a>
+            <a class="cms-menu-link" id="cms-nav-products" href="#/termekek">${escapeHtml(t.nav.products)}</a>
+            <a class="cms-menu-link" id="cms-nav-colors" href="#/szinek">${escapeHtml(t.nav.colors)}</a>
             <button class="cms-link-button" type="button" id="cms-logout">${escapeHtml(t.logout)}</button>
           </div>
         </header>
@@ -157,7 +159,9 @@ class CmsApp extends HTMLElement {
     this.currentHash = location.hash;
     this.view.innerHTML = '';
     let element;
-    if (route.name === 'list') {
+    if (route.name === 'palette') {
+      element = document.createElement('cms-color-palette');
+    } else if (route.name === 'list') {
       element = document.createElement('cms-product-list');
       element.setAttribute('category', route.category);
     } else {
@@ -167,8 +171,20 @@ class CmsApp extends HTMLElement {
       if (route.name === 'new' && route.from) element.setAttribute('from', route.from);
     }
     this.view.append(element);
+    this.markNav(route);
     this.renderStatus();
     window.scrollTo(0, 0);
+  }
+
+  // A fejléc menüjében az aktuális rész jelölése.
+  markNav(route) {
+    const onColors = route.name === 'palette';
+    for (const [id, current] of [['cms-nav-products', !onColors], ['cms-nav-colors', onColors]]) {
+      const link = this.querySelector(`#${id}`);
+      if (!link) continue;
+      if (current) link.setAttribute('aria-current', 'page');
+      else link.removeAttribute('aria-current');
+    }
   }
 
   async handleHashChange() {

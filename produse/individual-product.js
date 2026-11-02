@@ -8,9 +8,13 @@ class ProductDetails extends HTMLElement {
             window.location.href = '/index.html';
         }
 
-        fetch('/produse/products.json')
-            .then(res => res.json())
-            .then(data => {
+        // A színpaletta (colors.json) a swatch színét adja. Ha nem tölthető be, a CSS-osztályok a tartalék.
+        const loadPalette = () => fetch('/produse/colors.json')
+            .then(res => (res.ok ? res.json() : {}))
+            .catch(() => ({}));
+
+        Promise.all([fetch('/produse/products.json').then(res => res.json()), loadPalette()])
+            .then(([data, palette]) => {
                 const product = data[category]?.[productId];
 
                 if (!product) {
@@ -51,12 +55,13 @@ class ProductDetails extends HTMLElement {
 
                         const cssClass = this.getColorClass(colorName);
                         const activeClass = index === 0 ? 'active' : '';
+                        const swatchStyle = this.getSwatchStyle(palette, colorName);
                         return `
                             <button class="color-swatch ${cssClass} ${activeClass}" 
                                     data-color="${colorName}" 
                                     data-image="${colorImage}" 
                                     data-price="${colorPrice}" 
-                                    title="${colorName}"></button>
+                                    title="${colorName}"${swatchStyle ? ` style="${swatchStyle}"` : ''}></button>
                         `;
                     }).join('');
 
@@ -384,6 +389,15 @@ class ProductDetails extends HTMLElement {
                             <a href="/index.html" class="menu-button">Înapoi la acasă</a>
                         </main>`;
             });
+    }
+
+    // Inline stílus a színpalettából (colors.json). Csak szigorúan #rrggbb kód kerül a stílusba.
+    // Ha a szín nincs a palettán, nincs inline stílus: a getColorClass CSS-osztálya marad a tartalék.
+    getSwatchStyle(palette, colorName) {
+        const def = palette && Object.prototype.hasOwnProperty.call(palette, colorName) ? palette[colorName] : null;
+        if (!def || typeof def.hex !== 'string' || !/^#[0-9a-fA-F]{6}$/.test(def.hex)) return '';
+        const border = def.border === true ? ' border: 1px solid #e0e0e0;' : '';
+        return `background-color: ${def.hex};${border}`;
     }
 
     getColorClass(colorName) {
