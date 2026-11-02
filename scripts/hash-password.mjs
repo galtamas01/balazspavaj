@@ -1,4 +1,6 @@
-// Az admin jelszó hash-ének előállítása. Futtatás: npm run hash-password
+// Jelszó-hash előállítása. Futtatás:
+//   npm run hash-password            → ADMIN_PASSWORD_HASH (az ügyfél kezdő jelszava)
+//   npm run hash-password -- master  → MASTER_PASSWORD_HASH (a fejlesztő mester jelszava, mindig működik)
 // A jelszót nem argumentumként kéri (az bekerülne a shell előzményeibe), hanem rejtett beírással.
 
 import readline from 'node:readline';
@@ -27,7 +29,10 @@ function ask(question) {
   });
 }
 
-const password = await ask('Új admin jelszó (min. 12 karakter): ');
+const master = process.argv.includes('master');
+const variable = master ? 'MASTER_PASSWORD_HASH' : 'ADMIN_PASSWORD_HASH';
+
+const password = await ask(master ? 'Mester jelszó (min. 12 karakter): ' : 'Új admin jelszó (min. 12 karakter): ');
 if (password.length < 12) {
   console.error('A jelszó túl rövid (min. 12 karakter).');
   rl.close();
@@ -41,7 +46,11 @@ if (again !== password) {
 }
 
 console.log('\nÁllítsd be a Netlify környezeti változói között:\n');
-console.log(`ADMIN_PASSWORD_HASH=${await hashPassword(password)}`);
-console.log('\nHa még nincs SESSION_SECRET, ez egy új, véletlen érték hozzá:\n');
-console.log(`SESSION_SECRET=${randomBytes(48).toString('base64url')}`);
-console.log('\nFigyelem: a SESSION_SECRET cseréje minden bejelentkezett felhasználót kiléptet.');
+console.log(`${variable}=${await hashPassword(password)}`);
+if (!master) {
+  console.log('\nHa még nincs SESSION_SECRET, ez egy új, véletlen érték hozzá:\n');
+  console.log(`SESSION_SECRET=${randomBytes(48).toString('base64url')}`);
+  console.log('\nFigyelem: a SESSION_SECRET cseréje minden bejelentkezett felhasználót kiléptet.');
+} else {
+  console.log('\nA mester jelszó az adminból nem módosítható; cseréjéhez ezt a változót kell átírni a Netlify-on.');
+}

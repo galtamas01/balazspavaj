@@ -12,11 +12,18 @@ Netlify: *Site configuration → Environment variables*. A titkokat soha ne tedd
 
 | Változó | Mire kell | Honnan |
 |---|---|---|
-| `ADMIN_PASSWORD_HASH` | az admin jelszó hash-e | `npm run hash-password` |
+| `ADMIN_PASSWORD_HASH` | az ügyfél **kezdő** jelszavának hash-e (miután az ügyfél az adminban jelszót cserél, az új jelszó számít) | `npm run hash-password` |
+| `MASTER_PASSWORD_HASH` | a te mester jelszavad hash-e: **mindig működik**, az ügyfél jelszócseréje nem érinti, és az adminból nem módosítható | `npm run hash-password -- master` |
 | `SESSION_SECRET` | a munkamenet-süti aláírása (min. 32 karakter) | ugyanez a script kiír egy újat |
 | `GITHUB_TOKEN` | a katalógus olvasásához és mentéséhez | GitHub fine-grained token, csak ehhez a repóhoz, *Contents: Read and write* (a *Metadata: Read* magától jön) |
 
-Jelszócsere: `npm run hash-password`, majd az új `ADMIN_PASSWORD_HASH` beírása a Netlify-on és egy új deploy (*Deploys → Trigger deploy*). A `SESSION_SECRET` cseréje minden bejelentkezett felhasználót kiléptet.
+### Jelszavak
+
+- **Az ügyfél** az admin *Jelszó* menüpontjában cserélheti a jelszavát (jelenlegi + kétszer az új, min. 10 karakter). Az új jelszó csak scrypt hash-ként tárolódik a Netlify Blobs-ban (`cms-auth` / `client-password`), és onnantól ez számít; az `ADMIN_PASSWORD_HASH` csak addig, amíg még nem cserélt.
+- **A mester jelszó** (`MASTER_PASSWORD_HASH`) bármikor beléptet, függetlenül az ügyfél jelszavától. Beállítása: `npm run hash-password -- master`, a kiírt sort add hozzá a Netlify környezeti változóihoz, majd *Deploys → Trigger deploy*. Cseréje ugyanígy.
+- **Ha az ügyfél elfelejtette a jelszavát:** lépj be a mester jelszóval, *Jelszó* menü, a „Jelenlegi jelszó” helyére a mester jelszót írd, az újhoz pedig a számára választott új jelszót. (Az `ADMIN_PASSWORD_HASH` átírása ilyenkor már nem segít, mert a Blobs-beli jelszó az erősebb.)
+- Jelszócsere után a már bejelentkezett munkamenetek legfeljebb 8 óráig érvényben maradnak (a süti lejártáig); a `SESSION_SECRET` cseréje azonnal mindenkit kiléptet.
+- Ha a Blobs átmenetileg nem elérhető, az ügyfél nem tud belépni (különben egy régi, már lecserélt jelszó újra működne), a mester jelszó viszont ilyenkor is működik.
 
 Opcionális felülírások (az alapértékek ehhez a repóhoz valók): `GITHUB_OWNER`, `GITHUB_REPO`, `MAIN_BRANCH` (`main`), `DRAFT_BRANCH` (`cms-draft`), `PRODUCTS_PATH`, `COLORS_PATH`, `ASSETS_DIR`, `PREVIEW_URL` (a piszkozat előnézeti címe, alapból `https://cms-draft--balazspavaj.netlify.app`; ide mutat az admin „Előnézet” hivatkozása).
 
@@ -45,5 +52,6 @@ npm test                 # egységtesztek
 
 ```
 ADMIN_PASSWORD_HASH=...
+MASTER_PASSWORD_HASH=...   # opcionális
 SESSION_SECRET=...
 ```

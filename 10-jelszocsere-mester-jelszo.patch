@@ -1,0 +1,2150 @@
+From 53c1f0719fccda792fecfca0be576f90fc491b9d Mon Sep 17 00:00:00 2001
+From: Claude <noreply@anthropic.com>
+Date: Mon, 2 Nov 2026 16:01:08 +0100
+Subject: [PATCH] =?UTF-8?q?Jelsz=C3=B3csere=20az=20adminban=20=C3=A9s=20fe?=
+ =?UTF-8?q?jleszt=C5=91i=20mester=20jelsz=C3=B3?=
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+
+- Az ügyfél a Jelszó menüben cserélheti a belépési jelszavát (scrypt hash a Netlify Blobs-ban).
+- A MASTER_PASSWORD_HASH környezeti változóból jövő mester jelszó mindig beléptet, és az adminból nem módosítható.
+- Az ügyfél jelszavának ellenőrzése tárhiba esetén nem engedi be a régi jelszót; a mester ilyenkor is működik.
+- npm run hash-password -- master a mester jelszó hash-éhez.
+- A repó gyökeréből törölve a véletlenül bekerült 09-cms-6-fazis-publikalas.patch.
+
+Co-Authored-By: Claude Sonnet 5.5 <noreply@anthropic.com>
+Claude-Session: https://claude.ai/code/session_01NrRb4EVJh7dSthDakwcsy1
+---
+ 09-cms-6-fazis-publikalas.patch       | 1430 -------------------------
+ README.md                             |   12 +-
+ admin/admin.css                       |   13 +
+ admin/components/cms-app.js           |   11 +-
+ admin/components/cms-password-form.js |   76 ++
+ admin/lib/labels.js                   |   19 +-
+ admin/lib/router.js                   |    3 +-
+ netlify/functions/login.mjs           |   11 +-
+ netlify/functions/password.mjs        |   56 +
+ netlify/lib/credentials.mjs           |   88 ++
+ netlify/lib/http.mjs                  |    2 +
+ scripts/hash-password.mjs             |   21 +-
+ tests/credentials.test.mjs            |  182 ++++
+ 13 files changed, 477 insertions(+), 1447 deletions(-)
+ delete mode 100644 09-cms-6-fazis-publikalas.patch
+ create mode 100644 admin/components/cms-password-form.js
+ create mode 100644 netlify/functions/password.mjs
+ create mode 100644 netlify/lib/credentials.mjs
+ create mode 100644 tests/credentials.test.mjs
+
+diff --git a/09-cms-6-fazis-publikalas.patch b/09-cms-6-fazis-publikalas.patch
+deleted file mode 100644
+index c97f9b1..0000000
+--- a/09-cms-6-fazis-publikalas.patch
++++ /dev/null
+@@ -1,1430 +0,0 @@
+-From 22aed37c72b24ad443bc9dc6e56265cafa157614 Mon Sep 17 00:00:00 2001
+-From: Claude <noreply@anthropic.com>
+-Date: Mon, 2 Nov 2026 15:50:24 +0100
+-Subject: [PATCH] =?UTF-8?q?CMS=206.=20f=C3=A1zis:=20Publik=C3=A1l=C3=A1s,?=
+- =?UTF-8?q?=20Elvet=C3=A9s,=20havi=20sz=C3=A1ml=C3=A1l=C3=B3,=20a=20lemara?=
+- =?UTF-8?q?dt=20piszkozat=20automatikus=20utol=C3=A9r=C3=A9se?=
+-MIME-Version: 1.0
+-Content-Type: text/plain; charset=UTF-8
+-Content-Transfer-Encoding: 8bit
+-
+-Co-Authored-By: Claude Sonnet 5.5 <noreply@anthropic.com>
+-Claude-Session: https://claude.ai/code/session_01NrRb4EVJh7dSthDakwcsy1
+----
+- README.md                           |   6 +
+- admin/admin.css                     |  46 +++++
+- admin/components/cms-app.js         |  42 +---
+- admin/components/cms-publish-bar.js | 172 ++++++++++++++++
+- admin/lib/dialog.js                 |   2 +-
+- admin/lib/labels.js                 |  30 +++
+- admin/lib/state.js                  |  88 ++++++--
+- netlify/functions/catalog.mjs       |   8 +-
+- netlify/functions/discard.mjs       |  44 ++++
+- netlify/functions/publish.mjs       | 120 +++++++++++
+- netlify/functions/status.mjs        |  41 ++++
+- netlify/lib/errors.mjs              |   3 +-
+- netlify/lib/github.mjs              |  81 +++++++-
+- netlify/lib/http.mjs                |   3 +
+- netlify/lib/sync.mjs                |  32 +++
+- tests/helpers/fake-github.mjs       |  82 +++++++-
+- tests/publish.test.mjs              | 304 ++++++++++++++++++++++++++++
+- 17 files changed, 1042 insertions(+), 62 deletions(-)
+- create mode 100644 admin/components/cms-publish-bar.js
+- create mode 100644 netlify/functions/discard.mjs
+- create mode 100644 netlify/functions/publish.mjs
+- create mode 100644 netlify/functions/status.mjs
+- create mode 100644 netlify/lib/sync.mjs
+- create mode 100644 tests/publish.test.mjs
+-
+-diff --git a/README.md b/README.md
+-index 141c80d..7397bb0 100644
+---- a/README.md
+-+++ b/README.md
+-@@ -22,6 +22,12 @@ Opcionális felülírások (az alapértékek ehhez a repóhoz valók): `GITHUB_O
+- 
+- A token lejár (legfeljebb 1 év): lejárata után a CMS mentése leáll, ilyenkor új tokent kell létrehozni és a Netlify-on kicserélni.
+- 
+-+### Publikálás és a fejlesztői változtatások
+-+
+-+Az ügyfél minden mentése a `cms-draft` ágra kerül (előnézet), a **Publikálás** gomb egyetlen összefésülő commitot hoz létre a `main` ágon (`CMS: publikálás – …`), ez egy production deployt indít. A havi számláló ezeket a commitokat számolja.
+-+
+-+Ha te is a `main`-re pusholsz (pl. kódjavítás), a `cms-draft` lemarad. Az admin betöltésekor és publikálás előtt ezt automatikusan rendezi: ha az ügyfélnek nincs nem publikált módosítása, a `cms-draft` a `main`-re áll; ha van, a `main` változásai beolvadnak a piszkozatba. Ha **ugyanazt a sort** változtattátok a `products.json`-ban, az admin ütközést jelez, és publikálni nem enged, amíg a módosításokat el nem vetik (Elvetés gomb) vagy te össze nem fésülöd a `cms-draft` ágat. A tokennek a `main`-re is írnia kell, ezért a `main` ágon ne legyen ágvédelem (pull request kényszerítése).
+-+
+- ### Netlify beállítások
+- 
+- - *Build command* és *Publish directory*: üresen hagyhatók, a `netlify.toml` beállítja (nincs build lépés, `publish = "."`).
+-diff --git a/admin/admin.css b/admin/admin.css
+-index 6e502f7..93f66db 100644
+---- a/admin/admin.css
+-+++ b/admin/admin.css
+-@@ -1116,3 +1116,49 @@ cms-toast {
+-   margin: 0.25rem 0 0;
+-   padding-left: 1.1rem;
+- }
+-+
+-+/* ---- Publikálási sáv ---- */
+-+
+-+cms-publish-bar {
+-+  display: block;
+-+}
+-+
+-+.cms-status-row {
+-+  display: flex;
+-+  flex-wrap: wrap;
+-+  align-items: center;
+-+  justify-content: space-between;
+-+  gap: 0.5rem 1rem;
+-+}
+-+
+-+.cms-status-text {
+-+  flex: 1 1 18rem;
+-+  min-width: 0;
+-+}
+-+
+-+.cms-status-actions {
+-+  display: flex;
+-+  flex-wrap: wrap;
+-+  gap: 0.5rem;
+-+}
+-+
+-+.cms-status-conflict {
+-+  background: #fde8e8;
+-+  border-bottom-color: #f2b8b8;
+-+  color: var(--custom-black);
+-+}
+-+
+-+.cms-status-warn {
+-+  color: #8a5a00;
+-+  font-weight: 600;
+-+}
+-+
+-+.cms-dialog-list {
+-+  margin: 0.5rem 0;
+-+  padding-left: 1.2rem;
+-+}
+-+
+-+.cms-dialog-list li {
+-+  margin-bottom: 0.25rem;
+-+  overflow-wrap: anywhere;
+-+}
+-diff --git a/admin/components/cms-app.js b/admin/components/cms-app.js
+-index 59d9d08..2ca6d14 100644
+---- a/admin/components/cms-app.js
+-+++ b/admin/components/cms-app.js
+-@@ -2,13 +2,13 @@ import { api } from '/admin/lib/api.js';
+- import { LABELS } from '/admin/lib/labels.js';
+- import { escapeHtml } from '/admin/lib/escape.js';
+- import { store } from '/admin/lib/catalog.js';
+--import { diffCatalog } from '/admin/lib/diff.js';
+- import { confirmDialog } from '/admin/lib/dialog.js';
+- import { parseRoute, DEFAULT_HASH } from '/admin/lib/router.js';
+- import '/admin/components/cms-toast.js';
+- import '/admin/components/cms-product-list.js';
+- import '/admin/components/cms-product-editor.js';
+- import '/admin/components/cms-color-palette.js';
+-+import '/admin/components/cms-publish-bar.js';
+- 
+- // Az admin felület kerete: munkamenet, belépő képernyő, fejléc, állapotsor és az útvonalak.
+- class CmsApp extends HTMLElement {
+-@@ -82,14 +82,12 @@ class CmsApp extends HTMLElement {
+-             <button class="cms-link-button" type="button" id="cms-logout">${escapeHtml(t.logout)}</button>
+-           </div>
+-         </header>
+--        <div class="cms-status" id="cms-status" role="status" aria-live="polite"></div>
+-+        <cms-publish-bar class="cms-status" id="cms-status" role="status" aria-live="polite"></cms-publish-bar>
+-         <main class="cms-main" id="cms-view"></main>
+-       </div>
+-     `;
+-     this.view = this.querySelector('#cms-view');
+-     this.querySelector('#cms-logout').addEventListener('click', () => this.logout());
+--    this.unsubscribe?.();
+--    this.unsubscribe = store.subscribe(() => this.renderStatus());
+-     this.loadCatalog();
+-   }
+- 
+-@@ -112,40 +110,7 @@ class CmsApp extends HTMLElement {
+-     }
+-     this.currentHash = '';
+-     this.route();
+--  }
+--
+--  // Állapotsor: hány módosítás látszik az előnézeten, de nincs még publikálva.
+--  renderStatus() {
+--    const box = this.querySelector('#cms-status');
+--    if (!box) return;
+--    const state = store.get();
+--    if (state.status !== 'ready') {
+--      box.textContent = '';
+--      return;
+--    }
+--    const s = LABELS.statusBar;
+--    const diff = diffCatalog(state.main, state.draft);
+--    if (state.busy) {
+--      box.className = 'cms-status cms-status-busy';
+--      box.textContent = s.saving;
+--      return;
+--    }
+--    if (diff.count === 0) {
+--      box.className = 'cms-status';
+--      box.textContent = s.clean;
+--      return;
+--    }
+--    const parts = [];
+--    if (diff.added.length) parts.push(s.parts.added(diff.added.length));
+--    if (diff.changed.length) parts.push(s.parts.changed(diff.changed.length));
+--    if (diff.removed.length) parts.push(s.parts.removed(diff.removed.length));
+--    if (diff.reordered.length) parts.push(s.parts.order);
+--    if (diff.colorsChanged) parts.push(s.parts.colors);
+--    box.className = 'cms-status cms-status-pending';
+--    box.innerHTML = `
+--      <strong>${escapeHtml(s.pending(diff.count))}</strong> (${escapeHtml(parts.join(', '))})
+--      ${state.previewUrl ? `· <a href="${escapeHtml(state.previewUrl)}/" target="_blank" rel="noopener">${escapeHtml(s.preview)}</a>` : ''}
+--      <span class="cms-status-note">${escapeHtml(s.delay)}</span>`;
+-+    store.loadStats(); // a havi publikálások száma (nem kritikus, a háttérben)
+-   }
+- 
+-   // ---------- Útvonalak ----------
+-@@ -172,7 +137,6 @@ class CmsApp extends HTMLElement {
+-     }
+-     this.view.append(element);
+-     this.markNav(route);
+--    this.renderStatus();
+-     window.scrollTo(0, 0);
+-   }
+- 
+-diff --git a/admin/components/cms-publish-bar.js b/admin/components/cms-publish-bar.js
+-new file mode 100644
+-index 0000000..6d2e039
+---- /dev/null
+-+++ b/admin/components/cms-publish-bar.js
+-@@ -0,0 +1,172 @@
+-+import { LABELS } from '/admin/lib/labels.js';
+-+import { escapeHtml } from '/admin/lib/escape.js';
+-+import { store } from '/admin/lib/catalog.js';
+-+import { diffCatalog } from '/admin/lib/diff.js';
+-+import { confirmDialog } from '/admin/lib/dialog.js';
+-+import { notify } from '/admin/components/cms-toast.js';
+-+
+-+const S = LABELS.statusBar;
+-+const P = LABELS.publish;
+-+const MAX_NAMES = 6;
+-+
+-+const nameOf = (products, entry) => String(products?.[entry.category]?.[entry.id]?.name ?? entry.id).trim();
+-+
+-+function namesHtml(entries, products) {
+-+  const names = entries.map((e) => nameOf(products, e));
+-+  const shown = names.slice(0, MAX_NAMES).map((n) => `<em>${escapeHtml(n)}</em>`).join(', ');
+-+  return names.length > MAX_NAMES ? `${shown} ${escapeHtml(P.more(names.length - MAX_NAMES))}` : shown;
+-+}
+-+
+-+// Állapotsor a fejléc alatt: a nem publikált módosítások összegzése, Előnézet, Elvetés, Publikálás és a havi számláló.
+-+class CmsPublishBar extends HTMLElement {
+-+  connectedCallback() {
+-+    this.addEventListener('click', (event) => this.onClick(event));
+-+    this.unsubscribe = store.subscribe(() => this.render());
+-+    this.render();
+-+  }
+-+
+-+  disconnectedCallback() {
+-+    this.unsubscribe?.();
+-+  }
+-+
+-+  render() {
+-+    const state = store.get();
+-+    if (state.status !== 'ready') {
+-+      this.className = 'cms-status';
+-+      this.innerHTML = '';
+-+      return;
+-+    }
+-+    if (state.busy && state.busyKind !== 'save') {
+-+      this.className = 'cms-status cms-status-busy';
+-+      this.textContent = state.busyKind === 'discard' ? S.discarding : S.publishing;
+-+      return;
+-+    }
+-+    if (state.busy) {
+-+      this.className = 'cms-status cms-status-busy';
+-+      this.textContent = S.saving;
+-+      return;
+-+    }
+-+
+-+    const diff = diffCatalog(state.main, state.draft);
+-+    const credits = this.creditsHtml(state.stats);
+-+    if (state.syncConflict) {
+-+      this.className = 'cms-status cms-status-conflict';
+-+      this.innerHTML = `
+-+        <div class="cms-status-row">
+-+          <div class="cms-status-text"><strong>${escapeHtml(S.conflict)}</strong></div>
+-+          <div class="cms-status-actions">
+-+            <button type="button" class="cms-btn cms-btn-danger-outline" data-action="discard" ${state.dirty ? 'disabled' : ''}>${escapeHtml(S.discard)}</button>
+-+          </div>
+-+        </div>${credits}`;
+-+      return;
+-+    }
+-+    if (diff.count === 0) {
+-+      this.className = 'cms-status';
+-+      this.innerHTML = `${escapeHtml(S.clean)}${credits}`;
+-+      return;
+-+    }
+-+
+-+    const parts = [];
+-+    if (diff.added.length) parts.push(S.parts.added(diff.added.length));
+-+    if (diff.changed.length) parts.push(S.parts.changed(diff.changed.length));
+-+    if (diff.removed.length) parts.push(S.parts.removed(diff.removed.length));
+-+    if (diff.reordered.length) parts.push(S.parts.order);
+-+    if (diff.colorsChanged) parts.push(S.parts.colors);
+-+    const blocked = state.dirty;
+-+    this.className = 'cms-status cms-status-pending';
+-+    this.innerHTML = `
+-+      <div class="cms-status-row">
+-+        <div class="cms-status-text">
+-+          <strong>${escapeHtml(S.pending(diff.count))}</strong> (${escapeHtml(parts.join(', '))})
+-+          ${state.previewUrl ? `· <a href="${escapeHtml(state.previewUrl)}/" target="_blank" rel="noopener">${escapeHtml(S.preview)}</a>` : ''}
+-+          <span class="cms-status-note">${escapeHtml(blocked ? S.needSave : S.delay)}</span>
+-+        </div>
+-+        <div class="cms-status-actions">
+-+          <button type="button" class="cms-btn cms-btn-danger-outline" data-action="discard" ${blocked ? 'disabled' : ''}>${escapeHtml(S.discard)}</button>
+-+          <button type="button" class="cms-btn cms-btn-primary" data-action="publish" ${blocked ? 'disabled' : ''}>${escapeHtml(S.publish)}</button>
+-+        </div>
+-+      </div>${credits}`;
+-+  }
+-+
+-+  creditsHtml(stats) {
+-+    if (!stats) return '';
+-+    const warn = stats.publishesThisMonth > stats.warnAfter;
+-+    return `<span class="cms-status-note ${warn ? 'cms-status-warn' : ''}">${escapeHtml(S.credits(stats.publishesThisMonth, stats.estimatedCredits, stats.monthlyCredits))}${warn ? ` ${escapeHtml(S.creditsWarn)}` : ''}</span>`;
+-+  }
+-+
+-+  fail(error) {
+-+    if (error.status === 401) {
+-+      this.dispatchEvent(new CustomEvent('cms-session-expired', { bubbles: true }));
+-+      return;
+-+    }
+-+    // RELOAD: az állapot közben újratöltődött, a szerver üzenete elmondja, mit tegyen
+-+    notify(error.message, { type: error.code === 'RELOAD' || error.code === 'STALE' ? 'warn' : 'error' });
+-+  }
+-+
+-+  async onClick(event) {
+-+    const button = event.target.closest('button[data-action]');
+-+    if (!button || button.disabled || store.get().busy) return;
+-+    if (button.dataset.action === 'publish') await this.publish();
+-+    else if (button.dataset.action === 'discard') await this.discard();
+-+  }
+-+
+-+  summaryText(diff) {
+-+    const s = P.summary;
+-+    const parts = [];
+-+    if (diff.added.length) parts.push(s.added(diff.added.length));
+-+    if (diff.changed.length) parts.push(s.changed(diff.changed.length));
+-+    if (diff.removed.length) parts.push(s.removed(diff.removed.length));
+-+    if (diff.reordered.length) parts.push(s.order);
+-+    if (diff.colorsChanged) parts.push(s.colors);
+-+    return parts.join(', ');
+-+  }
+-+
+-+  changesHtml(diff, state) {
+-+    const items = [];
+-+    if (diff.added.length) items.push(`${escapeHtml(P.added(diff.added.length))}: ${namesHtml(diff.added, state.draft.products)}`);
+-+    if (diff.changed.length) items.push(`${escapeHtml(P.changed(diff.changed.length))}: ${namesHtml(diff.changed, state.draft.products)}`);
+-+    if (diff.removed.length) items.push(`${escapeHtml(P.removed(diff.removed.length))}: ${namesHtml(diff.removed, state.main.products)}`);
+-+    if (diff.reordered.length) items.push(escapeHtml(P.reordered(diff.reordered.map((c) => LABELS.categories[c] ?? c).join(', '))));
+-+    if (diff.colorsChanged) items.push(escapeHtml(P.colors));
+-+    return `<p>${escapeHtml(P.intro)}</p><ul class="cms-dialog-list">${items.map((i) => `<li>${i}</li>`).join('')}</ul><p class="cms-hint">${escapeHtml(P.note)}</p>`;
+-+  }
+-+
+-+  async publish() {
+-+    const state = store.get();
+-+    const diff = diffCatalog(state.main, state.draft);
+-+    const ok = await confirmDialog({
+-+      title: P.title,
+-+      messageHtml: this.changesHtml(diff, state),
+-+      confirmLabel: P.confirm,
+-+    });
+-+    if (!ok) return;
+-+    try {
+-+      await store.publish({ summary: this.summaryText(diff) });
+-+      notify(P.done);
+-+    } catch (error) {
+-+      if (error.code === 'RELOAD' || error.code === 'STALE') notify(P.reloaded, { type: 'warn' });
+-+      else this.fail(error);
+-+    }
+-+  }
+-+
+-+  async discard() {
+-+    const state = store.get();
+-+    const diff = diffCatalog(state.main, state.draft);
+-+    const ok = await confirmDialog({
+-+      title: LABELS.discard.title,
+-+      messageHtml: escapeHtml(state.syncConflict || diff.count === 0 ? LABELS.discard.textConflict : LABELS.discard.text(this.summaryText(diff))),
+-+      confirmLabel: LABELS.discard.confirm,
+-+      danger: true,
+-+    });
+-+    if (!ok) return;
+-+    try {
+-+      await store.discard();
+-+      notify(LABELS.discard.done);
+-+      if (location.hash.startsWith('#/termek/') || location.hash.startsWith('#/uj/')) location.hash = '#/termekek';
+-+    } catch (error) {
+-+      this.fail(error);
+-+    }
+-+  }
+-+}
+-+
+-+customElements.define('cms-publish-bar', CmsPublishBar);
+-diff --git a/admin/lib/dialog.js b/admin/lib/dialog.js
+-index b281ca4..c730d8e 100644
+---- a/admin/lib/dialog.js
+-+++ b/admin/lib/dialog.js
+-@@ -11,7 +11,7 @@ export function confirmDialog({ title, messageHtml, confirmLabel = LABELS.dialog
+-     dialog.innerHTML = `
+-       <form method="dialog" class="cms-dialog-body">
+-         <h2 class="cms-dialog-title" id="cms-dialog-title">${escapeHtml(title)}</h2>
+--        <p class="cms-dialog-text">${messageHtml}</p>
+-+        <div class="cms-dialog-text">${messageHtml}</div>
+-         <div class="cms-dialog-actions">
+-           <button type="submit" value="cancel" class="cms-btn" ${danger ? 'autofocus' : ''}>${escapeHtml(cancelLabel)}</button>
+-           <button type="submit" value="ok" class="cms-btn ${danger ? 'cms-btn-danger' : 'cms-btn-primary'}" ${danger ? '' : 'autofocus'}>${escapeHtml(confirmLabel)}</button>
+-diff --git a/admin/lib/labels.js b/admin/lib/labels.js
+-index b9e5396..a02c9ca 100644
+---- a/admin/lib/labels.js
+-+++ b/admin/lib/labels.js
+-@@ -34,6 +34,36 @@ export const LABELS = {
+-     preview: 'Előnézet megnyitása',
+-     delay: 'Mentés után az előnézet kb. 1 percen belül frissül.',
+-     saving: 'Mentés…',
+-+    publishing: 'Publikálás folyamatban…',
+-+    discarding: 'Elvetés folyamatban…',
+-+    publish: 'Publikálás',
+-+    discard: 'Elvetés',
+-+    needSave: 'Előbb mentsd el, vagy zárd be a szerkesztett terméket.',
+-+    conflict: 'Az éles weboldal kódja közben megváltozott, és ez ütközik a nem publikált módosításokkal. Publikálni most nem lehet: kérd a fejlesztő segítségét, vagy vesd el a módosításokat, és kezdd újra.',
+-+    credits: (n, credits, monthly) => `E hónapban ${n} publikálás (≈${credits} / ${monthly} kredit).`,
+-+    creditsWarn: 'Érdemes több módosítást egyszerre publikálni.',
+-+  },
+-+  publish: {
+-+    title: 'Publikálás',
+-+    intro: 'Ezek a módosítások kerülnek az éles weboldalra:',
+-+    added: (n) => (n === 1 ? '1 új termék' : `${n} új termék`),
+-+    changed: (n) => (n === 1 ? '1 módosított termék' : `${n} módosított termék`),
+-+    removed: (n) => (n === 1 ? '1 törölt termék' : `${n} törölt termék`),
+-+    reordered: (names) => `Új sorrend: ${names}`,
+-+    colors: 'A színpaletta módosításai',
+-+    more: (n) => `… és még ${n}`,
+-+    note: 'Az éles oldal kb. 1–2 percen belül frissül. A publikálás után a módosítások az Elvetéssel már nem vonhatók vissza.',
+-+    confirm: 'Publikálás',
+-+    done: 'Publikálva. Az éles oldal kb. 1–2 percen belül frissül.',
+-+    summary: { added: (n) => `${n} új`, changed: (n) => `${n} módosított`, removed: (n) => `${n} törölt`, order: 'sorrend', colors: 'színek' },
+-+    reloaded: 'Az előnézet újratöltődött. Nézd át a módosításokat, és publikálj újra, ha minden rendben van.',
+-+  },
+-+  discard: {
+-+    title: 'Módosítások elvetése',
+-+    text: (n) => `Biztosan elveted az összes nem publikált módosítást (${n})? A termékek, színek és feltöltött képek visszaállnak az éles oldal állapotára. Ez nem vonható vissza.`,
+-+    textConflict: 'Biztosan elveted az összes nem publikált módosítást? A termékek, színek és feltöltött képek visszaállnak az éles oldal állapotára. Ez nem vonható vissza.',
+-+    confirm: 'Módosítások elvetése',
+-+    done: 'A módosítások elvetve, az előnézet az éles oldallal megegyezik.',
+-   },
+-   list: {
+-     title: 'Termékek',
+-diff --git a/admin/lib/state.js b/admin/lib/state.js
+-index 89fca62..58d2691 100644
+---- a/admin/lib/state.js
+-+++ b/admin/lib/state.js
+-@@ -14,7 +14,10 @@ export function createStore(api) {
+-     previewUrl: '',
+-     assetsPrefix: '/assets/pavaje/',
+-     mainImages: new Set(),
+-+    syncConflict: false, // a main változásai nem olvaszthatók be a piszkozatba (lásd netlify/lib/sync.mjs)
+-+    stats: null, // { publishesThisMonth, estimatedCredits, monthlyCredits, warnAfter }
+-     busy: false,
+-+    busyKind: '', // 'save' | 'publish' | 'discard'
+-     dirty: false,
+-   };
+-   const listeners = new Set();
+-@@ -29,33 +32,52 @@ export function createStore(api) {
+-     return () => listeners.delete(fn);
+-   };
+- 
+-+  // A szerver állapotának átvétele (betöltés, újratöltés 409 után, publikálás/elvetés után).
+-+  function applyCatalog(data) {
+-+    return {
+-+      draft: data.draft,
+-+      main: data.main,
+-+      draftSha: data.draftSha,
+-+      mainSha: data.mainSha,
+-+      syncConflict: Boolean(data.syncConflict),
+-+      previewUrl: data.previewUrl ?? state.previewUrl,
+-+      assetsPrefix: data.assetsPrefix || state.assetsPrefix,
+-+      mainImages: collectImagePaths(data.main.products, data.main.colors),
+-+    };
+-+  }
+-+
+-   async function load() {
+-     set({ status: 'loading', error: null });
+-     try {
+-       const data = await api('catalog');
+--      set({
+--        status: 'ready',
+--        draft: data.draft,
+--        main: data.main,
+--        draftSha: data.draftSha,
+--        mainSha: data.mainSha,
+--        previewUrl: data.previewUrl || '',
+--        assetsPrefix: data.assetsPrefix || state.assetsPrefix,
+--        mainImages: collectImagePaths(data.main.products, data.main.colors),
+--      });
+-+      set({ status: 'ready', ...applyCatalog(data) });
+-     } catch (error) {
+-       set({ status: 'error', error });
+-       throw error;
+-     }
+-   }
+- 
+-+  // Újratöltés a kezelőfelület „betöltés…” állapota nélkül.
+-+  async function refresh() {
+-+    set(applyCatalog(await api('catalog')));
+-+  }
+-+
+-+  // A havi publikálások száma (csak tájékoztatás: hiba esetén csendben kimarad).
+-+  async function loadStats() {
+-+    try {
+-+      set({ stats: await api('status') });
+-+    } catch {
+-+      // a számláló nem kritikus
+-+    }
+-+  }
+-+
+-   // Egy módosítás mentése a piszkozatra. `apply(draft)` az aktuális piszkozaton ({ products, colors }) számolja ki
+-   // az újat és { products, colors }-t ad vissza; ezért ha közben máshol is mentettek (409), a módosítás az
+-   // újratöltött adaton megismételhető. `uploads`: [{ path, base64 }] – az új képek, ugyanabban a commitban mentődnek.
+-   // Visszaad: { warnings, changed }.
+-   async function commit({ apply, message, uploads = [] }) {
+-     if (state.busy) throw new ChangeError('Egy másik mentés még folyamatban van.');
+--    set({ busy: true });
+-+    set({ busy: true, busyKind: 'save' });
+-     try {
+-       for (let attempt = 0; ; attempt += 1) {
+-         const { products, colors } = apply(state.draft);
+-@@ -68,15 +90,51 @@ export function createStore(api) {
+-           return { warnings: result.warnings || [], changed: Boolean(result.changed) };
+-         } catch (error) {
+-           if (error.status === 409 && attempt === 0) {
+--            const data = await api('catalog');
+--            set({ draft: data.draft, main: data.main, draftSha: data.draftSha, mainSha: data.mainSha, mainImages: collectImagePaths(data.main.products, data.main.colors) });
+-+            await refresh();
+-             continue;
+-           }
+-           throw error;
+-         }
+-       }
+-     } finally {
+--      set({ busy: false });
+-+      set({ busy: false, busyKind: '' });
+-+    }
+-+  }
+-+
+-+  // Publikálás: a piszkozat élesítése. `summary`: rövid összegzés a commit üzenetébe (pl. „2 új, 1 módosított”).
+-+  // Siker után az állapot újratöltődik (a piszkozat és az éles ág azonos). Elavult állapotnál (409) is újratölt,
+-+  // hogy az ügyfél a valós állapotot lássa, majd a hibát továbbdobja.
+-+  async function publish({ summary = '' } = {}) {
+-+    if (state.busy) throw new ChangeError('Egy másik művelet még folyamatban van.');
+-+    set({ busy: true, busyKind: 'publish' });
+-+    try {
+-+      try {
+-+        await api('publish', { method: 'POST', body: { draftSha: state.draftSha, summary } });
+-+      } catch (error) {
+-+        if (error.status === 409) await refresh().catch(() => {});
+-+        throw error;
+-+      }
+-+      await refresh();
+-+      await loadStats();
+-+    } finally {
+-+      set({ busy: false, busyKind: '' });
+-+    }
+-+  }
+-+
+-+  // A nem publikált módosítások elvetése: a piszkozat visszaáll az éles állapotra.
+-+  async function discard() {
+-+    if (state.busy) throw new ChangeError('Egy másik művelet még folyamatban van.');
+-+    set({ busy: true, busyKind: 'discard' });
+-+    try {
+-+      try {
+-+        await api('discard', { method: 'POST', body: { draftSha: state.draftSha } });
+-+      } catch (error) {
+-+        if (error.status === 409) await refresh().catch(() => {});
+-+        throw error;
+-+      }
+-+      await refresh();
+-+    } finally {
+-+      set({ busy: false, busyKind: '' });
+-     }
+-   }
+- 
+-@@ -91,5 +149,5 @@ export function createStore(api) {
+-     if (state.dirty !== dirty) set({ dirty });
+-   };
+- 
+--  return { get, set, subscribe, load, save, saveCatalog, setDirty };
+-+  return { get, set, subscribe, load, refresh, loadStats, save, saveCatalog, publish, discard, setDirty };
+- }
+-diff --git a/netlify/functions/catalog.mjs b/netlify/functions/catalog.mjs
+-index 2112955..29e1e8f 100644
+---- a/netlify/functions/catalog.mjs
+-+++ b/netlify/functions/catalog.mjs
+-@@ -5,6 +5,7 @@ import { guardGet } from '../lib/auth.mjs';
+- import { getConfig } from '../lib/config.mjs';
+- import { createGithub } from '../lib/github.mjs';
+- import { DataError, toResponse } from '../lib/errors.mjs';
+-+import { syncDraft } from '../lib/sync.mjs';
+- 
+- async function readJson(github, path, ref, { required }) {
+-   const text = await github.readFile(path, ref);
+-@@ -25,10 +26,10 @@ export function makeHandler(getGithub) {
+-     if (denied) return denied;
+-     try {
+-       const github = await getGithub();
+--      const { draftBranch, mainBranch, productsPath, colorsPath } = github.config;
+-+      const { productsPath, colorsPath } = github.config;
+- 
+--      const draftSha = await github.ensureBranch(draftBranch, mainBranch);
+--      const mainSha = await github.getRef(mainBranch);
+-+      // létrehozza a piszkozat-ágot, és utoléri az éles ágat, ha az közben elmozdult (lásd sync.mjs)
+-+      const { draftSha, mainSha, conflict } = await syncDraft(github);
+-       const [draftProducts, draftColors, mainProducts, mainColors] = await Promise.all([
+-         readJson(github, productsPath, draftSha, { required: true }),
+-         readJson(github, colorsPath, draftSha, { required: false }),
+-@@ -42,6 +43,7 @@ export function makeHandler(getGithub) {
+-         main: { products: mainProducts, colors: mainColors },
+-         draftSha,
+-         mainSha,
+-+        syncConflict: conflict,
+-         previewUrl: github.config.previewUrl || '',
+-         assetsPrefix: `/${github.config.assetsDir}/`,
+-       });
+-diff --git a/netlify/functions/discard.mjs b/netlify/functions/discard.mjs
+-new file mode 100644
+-index 0000000..0925a1f
+---- /dev/null
+-+++ b/netlify/functions/discard.mjs
+-@@ -0,0 +1,44 @@
+-+// POST /api/discard – a nem publikált módosítások elvetése: a piszkozat-ág visszaáll az éles ág állapotára.
+-+// Bemenet: { draftSha } (amit az ügyfél látott; ha közben változott, 409). A feltöltött, de nem publikált képek
+-+// is eltűnnek, mert csak a piszkozat-ágon voltak meg.
+-+import { json, error, MESSAGES } from '../lib/http.mjs';
+-+import { guardPost } from '../lib/auth.mjs';
+-+import { getConfig } from '../lib/config.mjs';
+-+import { createGithub, GithubError, StaleBranchError } from '../lib/github.mjs';
+-+import { toResponse } from '../lib/errors.mjs';
+-+
+-+const SHA_RE = /^[0-9a-f]{40}$/;
+-+
+-+export function makeHandler(getGithub) {
+-+  return async (req) => {
+-+    const denied = guardPost(req);
+-+    if (denied) return denied;
+-+
+-+    let body;
+-+    try {
+-+      body = JSON.parse(await req.text());
+-+    } catch {
+-+      return error(400, 'BAD_REQUEST', MESSAGES.BAD_REQUEST);
+-+    }
+-+    if (typeof body?.draftSha !== 'string' || !SHA_RE.test(body.draftSha)) {
+-+      return error(400, 'BAD_REQUEST', MESSAGES.BAD_REQUEST);
+-+    }
+-+
+-+    try {
+-+      const github = await getGithub();
+-+      const { draftBranch, mainBranch } = github.config;
+-+      const head = await github.getRef(draftBranch);
+-+      if (head !== body.draftSha) throw new StaleBranchError();
+-+      const mainSha = await github.getRef(mainBranch);
+-+      if (!mainSha) throw new GithubError(404, `A(z) ${mainBranch} ág nem található.`);
+-+      await github.resetBranch(draftBranch, mainSha, { force: true });
+-+      return json({ ok: true, draftSha: mainSha });
+-+    } catch (e) {
+-+      return toResponse(e);
+-+    }
+-+  };
+-+}
+-+
+-+export default makeHandler(async () => createGithub(getConfig()));
+-+
+-+export const config = { path: '/api/discard' };
+-diff --git a/netlify/functions/publish.mjs b/netlify/functions/publish.mjs
+-new file mode 100644
+-index 0000000..e1d6cc7
+---- /dev/null
+-+++ b/netlify/functions/publish.mjs
+-@@ -0,0 +1,120 @@
+-+// POST /api/publish – a piszkozat (cms-draft) élesítése: egy összefésülő commit a main ágra → egyetlen production deploy.
+-+// Bemenet: { draftSha, summary }. A draftSha az, amit az ügyfél utoljára látott; ha közben bármi változott, a kérés
+-+// elutasított (409), és az ügyfél újratölti az állapotot, így sosem publikálódik olyan, amit nem látott.
+-+import { json, error, MESSAGES } from '../lib/http.mjs';
+-+import { guardPost } from '../lib/auth.mjs';
+-+import { getConfig } from '../lib/config.mjs';
+-+import { createGithub, MergeConflictError } from '../lib/github.mjs';
+-+import { toResponse, DataError } from '../lib/errors.mjs';
+-+import { syncDraft } from '../lib/sync.mjs';
+-+import { validateCatalog, collectImagePaths } from '../../src/shared/catalog-schema.js';
+-+import { PUBLISH_PREFIX } from './status.mjs';
+-+
+-+const SHA_RE = /^[0-9a-f]{40}$/;
+-+
+-+function parse(text, label) {
+-+  try {
+-+    return JSON.parse(text);
+-+  } catch {
+-+    throw new DataError(`${label} nem érvényes JSON.`);
+-+  }
+-+}
+-+
+-+export function publishMessage(summary) {
+-+  const text = String(summary ?? '')
+-+    .replace(/[\u0000-\u001f\u007f]+/g, ' ')
+-+    .replace(/\s+/g, ' ')
+-+    .trim()
+-+    .slice(0, 100);
+-+  return text ? `${PUBLISH_PREFIX} – ${text}` : PUBLISH_PREFIX;
+-+}
+-+
+-+export function makeHandler(getGithub) {
+-+  return async (req) => {
+-+    const denied = guardPost(req);
+-+    if (denied) return denied;
+-+
+-+    let body;
+-+    try {
+-+      body = JSON.parse(await req.text());
+-+    } catch {
+-+      return error(400, 'BAD_REQUEST', MESSAGES.BAD_REQUEST);
+-+    }
+-+    if (typeof body?.draftSha !== 'string' || !SHA_RE.test(body.draftSha)) {
+-+      return error(400, 'BAD_REQUEST', MESSAGES.BAD_REQUEST);
+-+    }
+-+
+-+    try {
+-+      const github = await getGithub();
+-+      const { draftBranch, mainBranch, productsPath, colorsPath, assetsDir } = github.config;
+-+
+-+      // 1) A piszkozatnak tartalmaznia kell az éles ág minden commitját, különben a publikálás felülírná őket.
+-+      const sync = await syncDraft(github);
+-+      if (sync.conflict) throw new MergeConflictError();
+-+      if (sync.draftSha !== body.draftSha) {
+-+        // közben mentett valaki, vagy az éles ág változása beolvadt: az ügyfél nem ezt látta
+-+        const stale = sync.action === 'none';
+-+        return error(409, stale ? 'STALE' : 'RELOAD', stale ? MESSAGES.STALE : MESSAGES.RELOAD);
+-+      }
+-+
+-+      // 2) Van-e egyáltalán mit publikálni?
+-+      const cmp = await github.compare(sync.mainSha, sync.draftSha);
+-+      if (cmp.files.length === 0) return error(400, 'NOTHING_TO_PUBLISH', MESSAGES.NOTHING_TO_PUBLISH);
+-+
+-+      // 3) Utolsó védvonal: a publikálandó állapot érvényes (a mentés már ellenőrizte, de a fejlesztő is nyúlhatott hozzá).
+-+      const [productsText, colorsText, files] = await Promise.all([
+-+        github.readFile(productsPath, sync.draftSha),
+-+        github.readFile(colorsPath, sync.draftSha),
+-+        github.listFiles(sync.draftSha, assetsDir),
+-+      ]);
+-+      if (productsText === null) throw new DataError('products.json hiányzik.');
+-+      const assetsPrefix = `/${assetsDir}/`;
+-+      const draftProducts = parse(productsText, 'products.json');
+-+      const draftColors = colorsText ? parse(colorsText, 'colors.json') : {};
+-+      const result = validateCatalog(draftProducts, draftColors, {
+-+        assets: new Set(files.map((p) => `/${p}`)),
+-+        assetsPrefix,
+-+      });
+-+      if (!result.ok) {
+-+        return json({ ok: false, code: 'VALIDATION', message: MESSAGES.VALIDATION, errors: result.errors, warnings: result.warnings }, 400);
+-+      }
+-+
+-+      // 4) Az éles oldal eddig használt, ezután már egyetlen termék által sem hivatkozott képei törlődnek (különben örökre
+-+      //    a repóban maradnának: a mentés a main által még használt képet nem törölheti). Csak olyan fájl törlődik, amit
+-+      //    az éles katalógus eddig tényleg használt, más fájlhoz nem nyúlunk.
+-+      const [mainProductsText, mainColorsText] = await Promise.all([
+-+        github.readFile(productsPath, sync.mainSha),
+-+        github.readFile(colorsPath, sync.mainSha),
+-+      ]);
+-+      const stillUsed = collectImagePaths(draftProducts, draftColors);
+-+      const existing = new Set(files);
+-+      const unused = mainProductsText === null
+-+        ? []
+-+        : [...collectImagePaths(parse(mainProductsText, 'main products.json'), mainColorsText ? parse(mainColorsText, 'main colors.json') : {})]
+-+            .filter((p) => p.startsWith(assetsPrefix) && !stillUsed.has(p) && existing.has(p.slice(1)))
+-+            .map((p) => p.slice(1));
+-+
+-+      // 5) Egy összefésülő commit a main-re (egyetlen production deploy), majd a piszkozat is a main-re áll.
+-+      const published = await github.publishCommit({
+-+        branch: mainBranch,
+-+        baseSha: sync.mainSha,
+-+        headSha: sync.draftSha,
+-+        message: publishMessage(body.summary),
+-+        deletes: unused,
+-+      });
+-+      try {
+-+        await github.resetBranch(draftBranch, published.sha, { force: false });
+-+      } catch (e) {
+-+        // nem végzetes: a következő betöltéskor a piszkozat úgyis a main-re áll (lásd sync.mjs)
+-+        console.error('A piszkozat-ág átállítása nem sikerült:', e.message);
+-+      }
+-+      return json({ ok: true, mainSha: published.sha, draftSha: published.sha });
+-+    } catch (e) {
+-+      return toResponse(e);
+-+    }
+-+  };
+-+}
+-+
+-+export default makeHandler(async () => createGithub(getConfig()));
+-+
+-+export const config = { path: '/api/publish' };
+-diff --git a/netlify/functions/status.mjs b/netlify/functions/status.mjs
+-new file mode 100644
+-index 0000000..ead9012
+---- /dev/null
+-+++ b/netlify/functions/status.mjs
+-@@ -0,0 +1,41 @@
+-+// GET /api/status – a havi publikálások száma és a becsült Netlify-kreditfogyás (a production deployok miatt).
+-+import { json } from '../lib/http.mjs';
+-+import { guardGet } from '../lib/auth.mjs';
+-+import { getConfig } from '../lib/config.mjs';
+-+import { createGithub } from '../lib/github.mjs';
+-+import { toResponse } from '../lib/errors.mjs';
+-+
+-+export const PUBLISH_PREFIX = 'CMS: publikálás';
+-+export const CREDITS_PER_DEPLOY = 15; // Netlify: egy production deploy 15 kredit
+-+export const MONTHLY_CREDITS = 300; // Netlify Free
+-+export const WARN_AFTER = 10;
+-+
+-+export function monthStart(date) {
+-+  return new Date(Date.UTC(date.getUTCFullYear(), date.getUTCMonth(), 1)).toISOString();
+-+}
+-+
+-+export function makeHandler(getGithub, now = () => new Date()) {
+-+  return async (req) => {
+-+    const denied = guardGet(req);
+-+    if (denied) return denied;
+-+    try {
+-+      const github = await getGithub();
+-+      const messages = await github.listCommitMessages(github.config.mainBranch, monthStart(now()));
+-+      const publishes = messages.filter((m) => m.startsWith(PUBLISH_PREFIX)).length;
+-+      return json({
+-+        ok: true,
+-+        publishesThisMonth: publishes,
+-+        estimatedCredits: publishes * CREDITS_PER_DEPLOY,
+-+        monthlyCredits: MONTHLY_CREDITS,
+-+        warnAfter: WARN_AFTER,
+-+        previewUrl: github.config.previewUrl || '',
+-+      });
+-+    } catch (e) {
+-+      return toResponse(e);
+-+    }
+-+  };
+-+}
+-+
+-+export default makeHandler(async () => createGithub(getConfig()));
+-+
+-+export const config = { path: '/api/status' };
+-diff --git a/netlify/lib/errors.mjs b/netlify/lib/errors.mjs
+-index 5798d3f..60f8da9 100644
+---- a/netlify/lib/errors.mjs
+-+++ b/netlify/lib/errors.mjs
+-@@ -1,7 +1,7 @@
+- // Kivételek → HTTP válaszok. A részleteket csak a function naplóba írjuk, az ügyfél magyar üzenetet kap.
+- import { error, MESSAGES } from './http.mjs';
+- import { ConfigError } from './auth.mjs';
+--import { GithubError, StaleBranchError } from './github.mjs';
+-+import { GithubError, StaleBranchError, MergeConflictError } from './github.mjs';
+- 
+- // A repóban lévő katalógusfájl hiányzik vagy nem értelmezhető.
+- export class DataError extends Error {
+-@@ -17,6 +17,7 @@ export function toResponse(e) {
+-     return error(500, 'CONFIG_ERROR', MESSAGES.CONFIG_ERROR);
+-   }
+-   if (e instanceof StaleBranchError) return error(409, 'STALE', MESSAGES.STALE);
+-+  if (e instanceof MergeConflictError) return error(409, 'CONFLICT', MESSAGES.CONFLICT);
+-   if (e instanceof DataError) {
+-     console.error('Adathiba:', e.message);
+-     return error(502, 'DATA_INVALID', MESSAGES.DATA_INVALID);
+-diff --git a/netlify/lib/github.mjs b/netlify/lib/github.mjs
+-index 8667922..9b8a04b 100644
+---- a/netlify/lib/github.mjs
+-+++ b/netlify/lib/github.mjs
+-@@ -1,5 +1,5 @@
+--// GitHub REST réteg: a katalógus olvasása és mentése a repóba. Csak a szükséges műveletek vannak benne;
+--// a publikálás (merge/reset) a 6. fázisban kerül ide. A fetch kicserélhető, így hálózat nélkül tesztelhető.
+-+// GitHub REST réteg: a katalógus olvasása, mentése és publikálása a repóban. Csak a szükséges műveletek vannak
+-+// benne. A fetch kicserélhető, így hálózat nélkül tesztelhető.
+- 
+- export class GithubError extends Error {
+-   constructor(status, message, body = '') {
+-@@ -18,6 +18,14 @@ export class StaleBranchError extends Error {
+-   }
+- }
+- 
+-+// A két ág módosításai nem fésülhetők össze automatikusan (ugyanazt a sort változtatták).
+-+export class MergeConflictError extends Error {
+-+  constructor() {
+-+    super('Az ágak összefésülése ütközik.');
+-+    this.name = 'MergeConflictError';
+-+  }
+-+}
+-+
+- const encodePath = (p) => p.split('/').map(encodeURIComponent).join('/');
+- 
+- export function createGithub(config, fetchImpl = globalThis.fetch) {
+-@@ -141,6 +149,75 @@ export function createGithub(config, fetchImpl = globalThis.fetch) {
+-       }
+-       return { sha: commit.sha, changed: true };
+-     },
+-+
+-+    // Két ág összehasonlítása: { aheadBy, behindBy, files }. aheadBy: a `head` ennyi commitja nincs a `base`-ben;
+-+    // behindBy: a `base` ennyi commitja nincs a `head`-ben; files: a `head` nettó változásai a közös őstől.
+-+    async compare(base, head) {
+-+      const data = await request('GET', `/compare/${encodeURIComponent(base)}...${encodeURIComponent(head)}`);
+-+      return { aheadBy: data.ahead_by, behindBy: data.behind_by, files: (data.files || []).map((f) => f.filename) };
+-+    },
+-+
+-+    // A `head` beolvasztása a `base` ágba (GitHub merge). Visszaad: az új commit sha-ja, vagy null, ha nincs mit.
+-+    // Ütközésnél MergeConflictError.
+-+    async mergeBranch(base, head, message) {
+-+      try {
+-+        const data = await request('POST', '/merges', { body: { base, head, commit_message: message } });
+-+        return data ? data.sha : null;
+-+      } catch (e) {
+-+        if (e instanceof GithubError && e.status === 409) throw new MergeConflictError();
+-+        throw e;
+-+      }
+-+    },
+-+
+-+    // Publikálás: a `headSha` fája kerül a `branch` ágra egy összefésülő commitban ([baseSha, headSha] szülőkkel),
+-+    // fast-forward nélkül, hogy a saját üzenetű commit mindig létrejöjjön (a havi számláló ezt számolja).
+-+    // Előfeltétel: a headSha már tartalmazza a baseSha-t (a branch csúcsát, amit a hívó látott), különben a
+-+    // baseSha tartalma elveszne. Ha a branch közben elmozdult, a frissítés nem fast-forward, ezért elutasított:
+-+    // StaleBranchError.
+-+    // deletes: a publikált fából törlendő fájlok (a már nem használt képek).
+-+    async publishCommit({ branch, baseSha, headSha, message, deletes = [] }) {
+-+      const head = await request('GET', `/git/commits/${headSha}`);
+-+      let treeSha = head.tree.sha;
+-+      if (deletes.length) {
+-+        const tree = await request('POST', '/git/trees', {
+-+          body: { base_tree: treeSha, tree: deletes.map((path) => ({ path, mode: '100644', type: 'blob', sha: null })) },
+-+        });
+-+        treeSha = tree.sha;
+-+      }
+-+      const commit = await request('POST', '/git/commits', {
+-+        body: { message, tree: treeSha, parents: [baseSha, headSha] },
+-+      });
+-+      try {
+-+        await request('PATCH', `/git/refs/heads/${encodePath(branch)}`, { body: { sha: commit.sha, force: false } });
+-+      } catch (e) {
+-+        if (e instanceof GithubError && (e.status === 409 || e.status === 422)) {
+-+          // elmozdult ág → elavult kérés; ha az ág nem mozdult, a frissítést valami más tiltja (pl. ágvédelem)
+-+          if ((await api.getRef(branch)) !== baseSha) throw new StaleBranchError();
+-+        }
+-+        throw e;
+-+      }
+-+      return { sha: commit.sha };
+-+    },
+-+
+-+    // Az ág csúcsának átállítása. force: nem fast-forward átállítás is megengedett (pl. elvetés).
+-+    async resetBranch(branch, sha, { force = true } = {}) {
+-+      await request('PATCH', `/git/refs/heads/${encodePath(branch)}`, { body: { sha, force } });
+-+      return sha;
+-+    },
+-+
+-+    // Az ág commitjainak üzenete egy időpont óta (legfeljebb 300 db), pl. a havi publikálások számolásához.
+-+    async listCommitMessages(branch, sinceIso) {
+-+      const out = [];
+-+      for (let page = 1; page <= 3; page += 1) {
+-+        const rows = await request(
+-+          'GET',
+-+          `/commits?sha=${encodeURIComponent(branch)}&since=${encodeURIComponent(sinceIso)}&per_page=100&page=${page}`,
+-+        );
+-+        out.push(...rows.map((r) => r.commit.message));
+-+        if (rows.length < 100) break;
+-+      }
+-+      return out;
+-+    },
+-   };
+-   return api;
+- }
+-diff --git a/netlify/lib/http.mjs b/netlify/lib/http.mjs
+-index 64c4eae..720a899 100644
+---- a/netlify/lib/http.mjs
+-+++ b/netlify/lib/http.mjs
+-@@ -24,9 +24,12 @@ export const MESSAGES = {
+-   CONFIG_ERROR: 'A rendszer beállítása hiányos. Szólj a fejlesztőnek.',
+-   SERVER_ERROR: 'Váratlan hiba történt. Próbáld újra egy perc múlva.',
+-   STALE: 'Közben máshol is módosult a katalógus. Frissítsd az oldalt, és vidd át újra a módosításaidat.',
+-+  CONFLICT: 'A weboldal kódja közben megváltozott, és ez ütközik a nem publikált módosításokkal. Ezt a fejlesztőnek kell összefésülnie. Addig publikálni nem lehet; az „Elvetés” gombbal újrakezdheted a módosításokat.',
+-   GITHUB_AUTH: 'A tárhely-hozzáférés nem működik (lejárt vagy hibás token?). Szólj a fejlesztőnek.',
+-   GITHUB_ERROR: 'A tárhely most nem érhető el. Próbáld újra egy perc múlva.',
+-   DATA_INVALID: 'A katalógusfájl hiányzik vagy hibás. Szólj a fejlesztőnek.',
+-   VALIDATION: 'A mentés nem sikerült: javítsd a jelölt mezőket.',
+-   TOO_LARGE: 'A feltöltés túl nagy.',
+-+  RELOAD: 'A weboldal közben frissült, ezért az előnézet újratöltődött. Nézd át a módosításokat, és publikálj újra.',
+-+  NOTHING_TO_PUBLISH: 'Nincs publikálandó módosítás.',
+- };
+-diff --git a/netlify/lib/sync.mjs b/netlify/lib/sync.mjs
+-new file mode 100644
+-index 0000000..7431c5a
+---- /dev/null
+-+++ b/netlify/lib/sync.mjs
+-@@ -0,0 +1,32 @@
+-+// A piszkozat-ág (cms-draft) lépéstartása az éles ággal (main).
+-+//
+-+// Ha a fejlesztő közben a main-re pusholt (pl. kódjavítás), a cms-draft lemarad: az előnézet régi kóddal
+-+// épül, és a publikálás ütközhetne. Ezért betöltéskor és publikálás előtt:
+-+//  - nincs lemaradás                               → nincs teendő ('none')
+-+//  - a piszkozatnak nincs saját (nettó) változása   → az ág egyszerűen a main-re áll ('reset')
+-+//  - van saját változása                           → a main beolvad a piszkozatba ('merged'), a változások megmaradnak
+-+//  - a beolvasztás ütközik                         → 'conflict': nem nyúlunk semmihez, publikálni nem lehet
+-+import { MergeConflictError } from './github.mjs';
+-+
+-+export async function syncDraft(github) {
+-+  const { draftBranch, mainBranch } = github.config;
+-+  let draftSha = await github.ensureBranch(draftBranch, mainBranch);
+-+  const mainSha = await github.getRef(mainBranch);
+-+
+-+  const cmp = await github.compare(mainSha, draftSha);
+-+  if (cmp.behindBy === 0) return { draftSha, mainSha, action: 'none', conflict: false };
+-+
+-+  if (cmp.files.length === 0) {
+-+    await github.resetBranch(draftBranch, mainSha);
+-+    return { draftSha: mainSha, mainSha, action: 'reset', conflict: false };
+-+  }
+-+
+-+  try {
+-+    const merged = await github.mergeBranch(draftBranch, mainBranch, 'CMS: az éles ág változásainak átvétele');
+-+    if (merged) draftSha = merged;
+-+    return { draftSha, mainSha, action: merged ? 'merged' : 'none', conflict: false };
+-+  } catch (e) {
+-+    if (e instanceof MergeConflictError) return { draftSha, mainSha, action: 'conflict', conflict: true };
+-+    throw e;
+-+  }
+-+}
+-diff --git a/tests/helpers/fake-github.mjs b/tests/helpers/fake-github.mjs
+-index 3316bdc..5734440 100644
+---- a/tests/helpers/fake-github.mjs
+-+++ b/tests/helpers/fake-github.mjs
+-@@ -17,6 +17,7 @@ export class FakeGitHub {
+-     this.failNext = null;
+-     this.lastHeaders = null;
+-     this.counter = 0;
+-+    this.clock = () => new Date(); // a commitok időbélyege (a tesztek átállíthatják)
+- 
+-     const entries = new Map();
+-     for (const [path, content] of Object.entries(files)) {
+-@@ -39,7 +40,7 @@ export class FakeGitHub {
+-   }
+-   _commit(tree, parents, message) {
+-     const sha = sha1('commit', tree, ...parents, message, String(++this.counter));
+--    this.commits.set(sha, { tree, parents, message });
+-+    this.commits.set(sha, { tree, parents, message, seq: this.counter, date: this.clock().toISOString() });
+-     return sha;
+-   }
+-   _resolve(ref) {
+-@@ -58,6 +59,27 @@ export class FakeGitHub {
+-     return false;
+-   }
+- 
+-+  _ancestors(sha) {
+-+    const seen = new Set();
+-+    const stack = [sha];
+-+    while (stack.length) {
+-+      const c = stack.pop();
+-+      if (seen.has(c)) continue;
+-+      seen.add(c);
+-+      stack.push(...this.commits.get(c).parents);
+-+    }
+-+    return seen;
+-+  }
+-+  // Legutóbbi közös ős (egyszerű történeteknél a legnagyobb sorszámú közös commit).
+-+  _mergeBase(a, b) {
+-+    const other = this._ancestors(b);
+-+    const common = [...this._ancestors(a)].filter((c) => other.has(c));
+-+    return common.sort((x, y) => this.commits.get(y).seq - this.commits.get(x).seq)[0] ?? null;
+-+  }
+-+  _entries(sha) {
+-+    return sha ? this.trees.get(this.commits.get(sha).tree) : new Map();
+-+  }
+-+
+-   // ---- ellenőrző segédek a tesztekhez ----
+-   head(branch) {
+-     return this.refs.get(branch) ?? null;
+-@@ -172,6 +194,64 @@ export class FakeGitHub {
+-       const buffer = this.fileBuffer(u.searchParams.get('ref'), m[1]);
+-       return buffer ? new Response(buffer, { status: 200 }) : json(404, { message: 'Not Found' });
+-     }
+-+    if (method === 'GET' && (m = path.match(/^\/compare\/(.+)\.\.\.(.+)$/))) {
+-+      const base = this._resolve(m[1]);
+-+      const head = this._resolve(m[2]);
+-+      if (!base || !head) return json(404, { message: 'Not Found' });
+-+      const inBase = this._ancestors(base);
+-+      const inHead = this._ancestors(head);
+-+      const mergeBase = this._mergeBase(base, head);
+-+      const before = this._entries(mergeBase);
+-+      const after = this._entries(head);
+-+      const files = [];
+-+      for (const p of new Set([...before.keys(), ...after.keys()])) {
+-+        if (before.get(p)?.sha !== after.get(p)?.sha) files.push({ filename: p });
+-+      }
+-+      return json(200, {
+-+        ahead_by: [...inHead].filter((c) => !inBase.has(c)).length,
+-+        behind_by: [...inBase].filter((c) => !inHead.has(c)).length,
+-+        files,
+-+      });
+-+    }
+-+    if (method === 'POST' && path === '/merges') {
+-+      const baseSha = this.refs.get(body.base);
+-+      const headSha = this._resolve(body.head);
+-+      if (!baseSha || !headSha) return json(404, { message: 'Not Found' });
+-+      if (this._isAncestor(headSha, baseSha)) return new Response(null, { status: 204 });
+-+      if (this._isAncestor(baseSha, headSha)) {
+-+        this.refs.set(body.base, headSha);
+-+        return json(201, { sha: headSha });
+-+      }
+-+      const ancestor = this._entries(this._mergeBase(baseSha, headSha));
+-+      const ours = this._entries(baseSha);
+-+      const theirs = this._entries(headSha);
+-+      const merged = new Map();
+-+      for (const p of new Set([...ancestor.keys(), ...ours.keys(), ...theirs.keys()])) {
+-+        const [a, o, t] = [ancestor.get(p), ours.get(p), theirs.get(p)];
+-+        let pick;
+-+        if (o?.sha === t?.sha) pick = o;
+-+        else if (o?.sha === a?.sha) pick = t;
+-+        else if (t?.sha === a?.sha) pick = o;
+-+        else return json(409, { message: 'Merge conflict' }); // fájl-szintű közelítés (a valódi GitHub soronként fésül)
+-+        if (pick) merged.set(p, pick);
+-+      }
+-+      const sha = this._commit(this._tree(merged), [baseSha, headSha], body.commit_message ?? 'merge');
+-+      this.refs.set(body.base, sha);
+-+      return json(201, { sha });
+-+    }
+-+    if (method === 'GET' && path === '/commits') {
+-+      const start = this._resolve(u.searchParams.get('sha'));
+-+      if (!start) return json(404, { message: 'Not Found' });
+-+      const since = u.searchParams.get('since');
+-+      const perPage = Number(u.searchParams.get('per_page') || 30);
+-+      const page = Number(u.searchParams.get('page') || 1);
+-+      const rows = [...this._ancestors(start)]
+-+        .map((sha) => ({ sha, ...this.commits.get(sha) }))
+-+        .filter((c) => !since || c.date >= since)
+-+        .sort((x, y) => y.seq - x.seq)
+-+        .map((c) => ({ sha: c.sha, commit: { message: c.message } }));
+-+      return json(200, rows.slice((page - 1) * perPage, page * perPage));
+-+    }
+-     return json(404, { message: `Nem támogatott végpont: ${method} ${path}` });
+-   }
+- }
+-diff --git a/tests/publish.test.mjs b/tests/publish.test.mjs
+-new file mode 100644
+-index 0000000..95df7af
+---- /dev/null
+-+++ b/tests/publish.test.mjs
+-@@ -0,0 +1,304 @@
+-+import { test, beforeEach } from 'node:test';
+-+import assert from 'node:assert/strict';
+-+import fs from 'node:fs';
+-+import { createSessionCookie } from '../netlify/lib/auth.mjs';
+-+import { createGithub, StaleBranchError } from '../netlify/lib/github.mjs';
+-+import { makeHandler as makeCatalog } from '../netlify/functions/catalog.mjs';
+-+import { makeHandler as makeSave } from '../netlify/functions/save.mjs';
+-+import { makeHandler as makePublish, publishMessage } from '../netlify/functions/publish.mjs';
+-+import { makeHandler as makeDiscard } from '../netlify/functions/discard.mjs';
+-+import { makeHandler as makeStatus, monthStart } from '../netlify/functions/status.mjs';
+-+import { collectImagePaths } from '../src/shared/catalog-schema.js';
+-+import { FakeGitHub, fakeWebp } from './helpers/fake-github.mjs';
+-+
+-+const ORIGIN = 'https://www.balazspavaj.ro';
+-+const read = (p) => fs.readFileSync(new URL(`../${p}`, import.meta.url), 'utf8');
+-+const productsText = read('produse/products.json');
+-+const colorsText = read('produse/colors.json');
+-+const products = JSON.parse(productsText);
+-+const colors = JSON.parse(colorsText);
+-+
+-+const CONFIG = {
+-+  token: 't', owner: 'galtamas01', repo: 'balazspavaj', mainBranch: 'main', draftBranch: 'cms-draft',
+-+  productsPath: 'produse/products.json', colorsPath: 'produse/colors.json', assetsDir: 'assets/pavaje',
+-+  previewUrl: 'https://cms-draft--balazspavaj.netlify.app',
+-+};
+-+
+-+let cookie;
+-+beforeEach(() => {
+-+  process.env.SESSION_SECRET = 'k'.repeat(48);
+-+  cookie = createSessionCookie(new Request(`${ORIGIN}/api/login`)).split(';')[0];
+-+});
+-+
+-+function setup({ now } = {}) {
+-+  const files = { 'index.html': '<html>v1', 'produse/colors.json': colorsText, 'produse/products.json': productsText };
+-+  for (const p of collectImagePaths(products, colors)) files[p.slice(1)] = fakeWebp(p);
+-+  const fake = new FakeGitHub({ files });
+-+  const getGithub = async () => createGithub(CONFIG, fake.fetch);
+-+  const handlers = {
+-+    catalog: makeCatalog(getGithub),
+-+    save: makeSave(getGithub),
+-+    publish: makeHandler(makePublish, getGithub),
+-+    discard: makeHandler(makeDiscard, getGithub),
+-+    status: makeStatus(getGithub, now),
+-+  };
+-+  const load = async () => (await handlers.catalog(new Request(`${ORIGIN}/api/catalog`, { headers: { cookie } }))).json();
+-+  const post = (name, body, { headers = { cookie }, origin = ORIGIN } = {}) =>
+-+    handlers[name](new Request(`${ORIGIN}/api/${name}`, { method: 'POST', headers: { ...headers, ...(origin ? { origin } : {}) }, body: JSON.stringify(body) }));
+-+  // egy szerkesztés mentése a piszkozatra (az első termék árának átírása)
+-+  const editPrice = async (price, uploads = [], mutate = null) => {
+-+    const c = await load();
+-+    const p = structuredClone(c.draft.products);
+-+    p.pavaje['autoblocant-6cm'].price = price;
+-+    mutate?.(p);
+-+    const res = await post('save', { baseSha: c.draftSha, products: p, colors: c.draft.colors, uploads, message: 'Módosítás: teszt' });
+-+    assert.equal(res.status, 200, JSON.stringify(await res.clone().json()));
+-+    return (await res.json()).draftSha;
+-+  };
+-+  return { fake, load, post, editPrice, handlers };
+-+}
+-+const makeHandler = (factory, getGithub) => factory(getGithub);
+-+const quiet = async (fn) => {
+-+  const original = console.error;
+-+  console.error = () => {};
+-+  try {
+-+    return await fn();
+-+  } finally {
+-+    console.error = original;
+-+  }
+-+};
+-+
+-+test('publikálás: összefésülő commit a main-re saját üzenettel, a piszkozat a main-re áll, a fájlok átkerülnek', async () => {
+-+  const { fake, load, post, editPrice } = setup();
+-+  await load();
+-+  const draftSha = await editPrice('99,50');
+-+  const mainBefore = fake.head('main');
+-+
+-+  const res = await post('publish', { draftSha, summary: '1 módosított' });
+-+  assert.equal(res.status, 200);
+-+  const data = await res.json();
+-+  assert.equal(data.ok, true);
+-+  assert.equal(data.mainSha, fake.head('main'));
+-+  assert.equal(fake.message('main'), 'CMS: publikálás – 1 módosított');
+-+  assert.deepEqual(fake.commits.get(fake.head('main')).parents, [mainBefore, draftSha], 'merge commit: [main, draft]');
+-+  assert.equal(JSON.parse(fake.fileAt('main', 'produse/products.json')).pavaje['autoblocant-6cm'].price, '99,50');
+-+  assert.equal(fake.head('cms-draft'), fake.head('main'), 'a piszkozat a main-re állt');
+-+  assert.equal(fake.fileAt('main', 'index.html'), '<html>v1');
+-+});
+-+
+-+test('publikálás: a feltöltött kép átkerül, a cserélt régi kép törlődik a main-ről is', async () => {
+-+  const { fake, load, post, editPrice } = setup();
+-+  const c = await load();
+-+  const oldImage = c.draft.products.pavaje['autoblocant-6cm'].image;
+-+  const newImage = '/assets/pavaje/autoblocant-6cm_aaaaaaaa.webp';
+-+  const draftSha = await editPrice('40', [{ path: newImage, base64: fakeWebp('new').toString('base64') }], (p) => {
+-+    p.pavaje['autoblocant-6cm'].image = newImage;
+-+    // a régi képet más termék nem használja ebben a tesztben
+-+    for (const items of Object.values(p)) for (const prod of Object.values(items)) {
+-+      if (prod.image === oldImage) prod.image = newImage;
+-+      for (const row of [...(prod.colors || []), ...(prod.sizes || [])]) if (row.image === oldImage) row.image = newImage;
+-+    }
+-+  });
+-+  assert.ok(fake.fileBuffer('cms-draft', newImage.slice(1)));
+-+  assert.equal(fake.fileBuffer('main', newImage.slice(1)), null, 'publikálás előtt még nincs a main-en');
+-+  assert.equal((await post('publish', { draftSha, summary: 'kép' })).status, 200);
+-+  assert.ok(fake.fileBuffer('main', newImage.slice(1)), 'publikálás után ott van');
+-+  assert.equal(fake.fileBuffer('main', oldImage.slice(1)), null, 'a régi kép törlődött');
+-+});
+-+
+-+test('publikálás: elavult draftSha → 409 STALE, a main nem változik; nincs mit publikálni → 400', async () => {
+-+  const { fake, load, post, editPrice } = setup();
+-+  const c = await load();
+-+  const mainBefore = fake.head('main');
+-+  const nothing = await post('publish', { draftSha: c.draftSha });
+-+  assert.equal(nothing.status, 400);
+-+  assert.equal((await nothing.json()).code, 'NOTHING_TO_PUBLISH');
+-+
+-+  const draftSha = await editPrice('77');
+-+  await editPrice('78'); // közben másik mentés
+-+  const stale = await post('publish', { draftSha });
+-+  assert.equal(stale.status, 409);
+-+  assert.equal((await stale.json()).code, 'STALE');
+-+  assert.equal(fake.head('main'), mainBefore);
+-+});
+-+
+-+test('a fejlesztő a main-re pusholt, a piszkozatnak nincs saját változása → a piszkozat a main-re áll (előnézet új kóddal)', async () => {
+-+  const { fake, load } = setup();
+-+  const first = await load();
+-+  fake.commitDirect('main', { 'index.html': '<html>v2' });
+-+  const next = await load();
+-+  assert.notEqual(next.draftSha, first.draftSha);
+-+  assert.equal(next.draftSha, fake.head('main'));
+-+  assert.equal(next.syncConflict, false);
+-+  assert.equal(fake.fileAt('cms-draft', 'index.html'), '<html>v2');
+-+});
+-+
+-+test('a fejlesztő a main-re pusholt, a piszkozatnak van saját változása → a main beolvad, a változás megmarad, publikálás az újratöltés után megy', async () => {
+-+  const { fake, load, post, editPrice } = setup();
+-+  await load();
+-+  const oldDraft = await editPrice('55');
+-+  fake.commitDirect('main', { 'index.html': '<html>v2' });
+-+
+-+  const next = await load();
+-+  assert.equal(next.syncConflict, false);
+-+  assert.notEqual(next.draftSha, oldDraft, 'a draft új (összefésülő) commitra mozdult');
+-+  assert.equal(next.draft.products.pavaje['autoblocant-6cm'].price, '55', 'a mentett módosítás megmaradt');
+-+  assert.equal(fake.fileAt('cms-draft', 'index.html'), '<html>v2', 'a fejlesztő változása is megjelent az előnézeten');
+-+
+-+  // a régi draftSha-val (amit az ügyfél a betöltés előtt látott) nem publikál, mert közben változott az alap
+-+  const old = await post('publish', { draftSha: oldDraft });
+-+  assert.equal(old.status, 409);
+-+  assert.equal((await old.json()).code, 'STALE');
+-+  const ok = await post('publish', { draftSha: next.draftSha, summary: 'ár' });
+-+  assert.equal(ok.status, 200);
+-+  assert.equal(fake.fileAt('main', 'index.html'), '<html>v2', 'a fejlesztő változása nem veszett el');
+-+  assert.equal(JSON.parse(fake.fileAt('main', 'produse/products.json')).pavaje['autoblocant-6cm'].price, '55');
+-+});
+-+
+-+test('publikálás közben mozdul a main (a betöltés és a publikálás között) → RELOAD, nem publikál', async () => {
+-+  const { fake, load, post, editPrice } = setup();
+-+  await load();
+-+  const draftSha = await editPrice('61');
+-+  fake.commitDirect('main', { 'index.html': '<html>v3' }); // az ügyfél még a régi állapotot látja
+-+  const res = await post('publish', { draftSha });
+-+  assert.equal(res.status, 409);
+-+  assert.equal((await res.json()).code, 'RELOAD');
+-+  assert.equal(fake.fileAt('main', 'index.html'), '<html>v3');
+-+  assert.equal(JSON.parse(fake.fileAt('main', 'produse/products.json')).pavaje['autoblocant-6cm'].price, products.pavaje['autoblocant-6cm'].price, 'a main tartalma nem változott');
+-+});
+-+
+-+test('ütközés: a fejlesztő is ugyanazt a fájlt módosította → syncConflict, a piszkozat érintetlen, publikálni nem lehet, az elvetés kiút', async () => {
+-+  const { fake, load, post, editPrice } = setup();
+-+  await load();
+-+  const draftSha = await editPrice('55');
+-+  const changed = structuredClone(products);
+-+  changed.pavaje['autoblocant-6cm'].price = '1';
+-+  fake.commitDirect('main', { 'produse/products.json': JSON.stringify(changed, null, 4) });
+-+  const mainSha = fake.head('main');
+-+
+-+  const c = await load();
+-+  assert.equal(c.syncConflict, true);
+-+  assert.equal(c.draftSha, draftSha, 'a piszkozat érintetlen');
+-+  assert.equal(c.draft.products.pavaje['autoblocant-6cm'].price, '55');
+-+
+-+  const res = await quiet(() => post('publish', { draftSha }));
+-+  assert.equal(res.status, 409);
+-+  const body = await res.json();
+-+  assert.equal(body.code, 'CONFLICT');
+-+  assert.match(body.message, /fejlesztő/);
+-+  assert.equal(fake.head('main'), mainSha, 'a main nem változott');
+-+
+-+  assert.equal((await post('discard', { draftSha })).status, 200);
+-+  const after = await load();
+-+  assert.equal(after.syncConflict, false);
+-+  assert.equal(after.draftSha, mainSha);
+-+});
+-+
+-+test('elvetés: a piszkozat a main-re áll, a feltöltött nem publikált kép eltűnik; elavult sha → 409', async () => {
+-+  const { fake, load, post, editPrice } = setup();
+-+  await load();
+-+  const image = '/assets/pavaje/uj_bbbbbbbb.webp';
+-+  const draftSha = await editPrice('5', [{ path: image, base64: fakeWebp('x').toString('base64') }], (p) => {
+-+    p.pavaje['autoblocant-6cm'].colors[0].image = image;
+-+  });
+-+  assert.ok(fake.fileBuffer('cms-draft', image.slice(1)));
+-+
+-+  const stale = await post('discard', { draftSha: 'a'.repeat(40) });
+-+  assert.equal(stale.status, 409);
+-+  assert.equal(fake.head('cms-draft'), draftSha, 'elavult kérés nem ront semmit');
+-+
+-+  const res = await post('discard', { draftSha });
+-+  assert.equal(res.status, 200);
+-+  assert.equal((await res.json()).draftSha, fake.head('main'));
+-+  assert.equal(fake.head('cms-draft'), fake.head('main'));
+-+  assert.equal(fake.fileBuffer('cms-draft', image.slice(1)), null);
+-+  const c = await load();
+-+  assert.deepEqual(c.draft.products, products);
+-+});
+-+
+-+test('publikálás: érvénytelen piszkozat (pl. a fejlesztő elrontotta a fájlt) nem kerül élesbe', async () => {
+-+  const { fake, load, post } = setup();
+-+  const c = await load();
+-+  fake.commitDirect('cms-draft', { 'produse/products.json': '{"pavaje": {"x": {"name": "x"}}}' });
+-+  const mainBefore = fake.head('main');
+-+  const res = await post('publish', { draftSha: fake.head('cms-draft') });
+-+  assert.equal(res.status, 400);
+-+  assert.equal((await res.json()).code, 'VALIDATION');
+-+  assert.equal(fake.head('main'), mainBefore);
+-+  assert.ok(c.draftSha);
+-+});
+-+
+-+test('github.publishCommit: ha a main közben elmozdult, StaleBranchError, és a main érintetlen', async () => {
+-+  const { fake, load, editPrice } = setup();
+-+  await load();
+-+  const draftSha = await editPrice('9');
+-+  const github = createGithub(CONFIG, fake.fetch);
+-+  const seenMain = fake.head('main');
+-+  fake.commitDirect('main', { 'index.html': '<html>v9' });
+-+  const moved = fake.head('main');
+-+  await assert.rejects(() => github.publishCommit({ branch: 'main', baseSha: seenMain, headSha: draftSha, message: 'CMS: publikálás' }), StaleBranchError);
+-+  assert.equal(fake.head('main'), moved);
+-+});
+-+
+-+test('védelem: munkamenet és Origin kell, csak POST (publish/discard), csak GET (status)', async () => {
+-+  const { handlers, post } = setup();
+-+  for (const name of ['publish', 'discard']) {
+-+    assert.equal((await post(name, { draftSha: 'a'.repeat(40) }, { headers: {} })).status, 401, `${name}: nincs süti`);
+-+    assert.equal((await post(name, { draftSha: 'a'.repeat(40) }, { origin: 'https://evil.example' })).status, 403, `${name}: idegen origin`);
+-+    assert.equal((await handlers[name](new Request(`${ORIGIN}/api/${name}`, { headers: { cookie } }))).status, 405, `${name}: GET`);
+-+    assert.equal((await post(name, { draftSha: 'nem-sha' })).status, 400, `${name}: hibás sha`);
+-+  }
+-+  assert.equal((await handlers.status(new Request(`${ORIGIN}/api/status`))).status, 401);
+-+  assert.equal((await handlers.status(new Request(`${ORIGIN}/api/status`, { method: 'POST', headers: { cookie, origin: ORIGIN } }))).status, 405);
+-+});
+-+
+-+test('status: csak az e havi „CMS: publikálás” commitokat számolja, 15 kredit/db', async () => {
+-+  const now = new Date('2026-11-15T10:00:00Z');
+-+  const { fake, load, handlers, post, editPrice } = setup({ now: () => now });
+-+  await load();
+-+  // múlt havi publikálás
+-+  fake.clock = () => new Date('2026-10-20T10:00:00Z');
+-+  fake.commitDirect('main', { 'a.txt': '1' });
+-+  fake.commits.get(fake.head('main')).message = 'CMS: publikálás – régi';
+-+  // ez a havi: egy fejlesztői commit (nem számít) és két publikálás
+-+  fake.clock = () => new Date('2026-11-03T10:00:00Z');
+-+  fake.commitDirect('main', { 'b.txt': '1' });
+-+  for (const price of ['10', '11']) {
+-+    fake.clock = () => new Date('2026-11-04T10:00:00Z');
+-+    await load();
+-+    const draftSha = await editPrice(price);
+-+    assert.equal((await post('publish', { draftSha, summary: price })).status, 200);
+-+  }
+-+  const res = await handlers.status(new Request(`${ORIGIN}/api/status`, { headers: { cookie } }));
+-+  const data = await res.json();
+-+  assert.equal(data.publishesThisMonth, 2);
+-+  assert.equal(data.estimatedCredits, 30);
+-+  assert.equal(data.monthlyCredits, 300);
+-+  assert.equal(data.warnAfter, 10);
+-+  assert.equal(monthStart(now), '2026-11-01T00:00:00.000Z');
+-+});
+-+
+-+test('publishMessage: egy soros, levágott, előtaggal', () => {
+-+  assert.equal(publishMessage(''), 'CMS: publikálás');
+-+  assert.equal(publishMessage('2 új,\n1 módosított'), 'CMS: publikálás – 2 új, 1 módosított');
+-+  assert.equal(publishMessage('x'.repeat(300)).length, 'CMS: publikálás – '.length + 100);
+-+});
+-+
+-+test('publikálás: a más termék által még használt kép megmarad, a nem képes fájlokhoz nem nyúl', async () => {
+-+  const { fake, load, post, editPrice } = setup();
+-+  const c = await load();
+-+  const shared = c.draft.products.pavaje['autoblocant-6cm'].image;
+-+  const users = JSON.stringify(c.draft.products).split(shared).length - 1;
+-+  assert.ok(users >= 1);
+-+  const newImage = '/assets/pavaje/autoblocant-6cm_cccccccc.webp';
+-+  // csak a fő képet cseréljük; a régi fájlra máshol is hivatkozik valami, vagy ha nem, akkor törlődhet
+-+  const draftSha = await editPrice('41', [{ path: newImage, base64: fakeWebp('n').toString('base64') }], (p) => {
+-+    p.pavaje['autoblocant-6cm'].image = newImage;
+-+  });
+-+  const after = JSON.stringify(JSON.parse(fake.fileAt('cms-draft', 'produse/products.json')));
+-+  const stillReferenced = after.includes(shared);
+-+  assert.equal((await post('publish', { draftSha })).status, 200);
+-+  assert.equal(Boolean(fake.fileBuffer('main', shared.slice(1))), stillReferenced, 'csak a már nem hivatkozott kép törlődik');
+-+  assert.equal(fake.fileAt('main', 'index.html'), '<html>v1');
+-+  assert.ok(fake.fileBuffer('main', 'produse/colors.json'));
+-+});
+--- 
+-2.43.0
+-
+diff --git a/README.md b/README.md
+index 7397bb0..761eec9 100644
+--- a/README.md
++++ b/README.md
+@@ -12,11 +12,18 @@ Netlify: *Site configuration → Environment variables*. A titkokat soha ne tedd
+ 
+ | Változó | Mire kell | Honnan |
+ |---|---|---|
+-| `ADMIN_PASSWORD_HASH` | az admin jelszó hash-e | `npm run hash-password` |
++| `ADMIN_PASSWORD_HASH` | az ügyfél **kezdő** jelszavának hash-e (miután az ügyfél az adminban jelszót cserél, az új jelszó számít) | `npm run hash-password` |
++| `MASTER_PASSWORD_HASH` | a te mester jelszavad hash-e: **mindig működik**, az ügyfél jelszócseréje nem érinti, és az adminból nem módosítható | `npm run hash-password -- master` |
+ | `SESSION_SECRET` | a munkamenet-süti aláírása (min. 32 karakter) | ugyanez a script kiír egy újat |
+ | `GITHUB_TOKEN` | a katalógus olvasásához és mentéséhez | GitHub fine-grained token, csak ehhez a repóhoz, *Contents: Read and write* (a *Metadata: Read* magától jön) |
+ 
+-Jelszócsere: `npm run hash-password`, majd az új `ADMIN_PASSWORD_HASH` beírása a Netlify-on és egy új deploy (*Deploys → Trigger deploy*). A `SESSION_SECRET` cseréje minden bejelentkezett felhasználót kiléptet.
++### Jelszavak
++
++- **Az ügyfél** az admin *Jelszó* menüpontjában cserélheti a jelszavát (jelenlegi + kétszer az új, min. 10 karakter). Az új jelszó csak scrypt hash-ként tárolódik a Netlify Blobs-ban (`cms-auth` / `client-password`), és onnantól ez számít; az `ADMIN_PASSWORD_HASH` csak addig, amíg még nem cserélt.
++- **A mester jelszó** (`MASTER_PASSWORD_HASH`) bármikor beléptet, függetlenül az ügyfél jelszavától. Beállítása: `npm run hash-password -- master`, a kiírt sort add hozzá a Netlify környezeti változóihoz, majd *Deploys → Trigger deploy*. Cseréje ugyanígy.
++- **Ha az ügyfél elfelejtette a jelszavát:** lépj be a mester jelszóval, *Jelszó* menü, a „Jelenlegi jelszó” helyére a mester jelszót írd, az újhoz pedig a számára választott új jelszót. (Az `ADMIN_PASSWORD_HASH` átírása ilyenkor már nem segít, mert a Blobs-beli jelszó az erősebb.)
++- Jelszócsere után a már bejelentkezett munkamenetek legfeljebb 8 óráig érvényben maradnak (a süti lejártáig); a `SESSION_SECRET` cseréje azonnal mindenkit kiléptet.
++- Ha a Blobs átmenetileg nem elérhető, az ügyfél nem tud belépni (különben egy régi, már lecserélt jelszó újra működne), a mester jelszó viszont ilyenkor is működik.
+ 
+ Opcionális felülírások (az alapértékek ehhez a repóhoz valók): `GITHUB_OWNER`, `GITHUB_REPO`, `MAIN_BRANCH` (`main`), `DRAFT_BRANCH` (`cms-draft`), `PRODUCTS_PATH`, `COLORS_PATH`, `ASSETS_DIR`, `PREVIEW_URL` (a piszkozat előnézeti címe, alapból `https://cms-draft--balazspavaj.netlify.app`; ide mutat az admin „Előnézet” hivatkozása).
+ 
+@@ -45,5 +52,6 @@ npm test                 # egységtesztek
+ 
+ ```
+ ADMIN_PASSWORD_HASH=...
++MASTER_PASSWORD_HASH=...   # opcionális
+ SESSION_SECRET=...
+ ```
+diff --git a/admin/admin.css b/admin/admin.css
+index 93f66db..f4b03b4 100644
+--- a/admin/admin.css
++++ b/admin/admin.css
+@@ -1162,3 +1162,16 @@ cms-publish-bar {
+   margin-bottom: 0.25rem;
+   overflow-wrap: anywhere;
+ }
++
++/* ---- Jelszócsere ---- */
++
++.cms-password {
++  max-width: 28rem;
++  display: flex;
++  flex-direction: column;
++  gap: 1rem;
++}
++
++.cms-password .cms-form {
++  padding: 1.25rem;
++}
+diff --git a/admin/components/cms-app.js b/admin/components/cms-app.js
+index 2ca6d14..3256395 100644
+--- a/admin/components/cms-app.js
++++ b/admin/components/cms-app.js
+@@ -8,6 +8,7 @@ import '/admin/components/cms-toast.js';
+ import '/admin/components/cms-product-list.js';
+ import '/admin/components/cms-product-editor.js';
+ import '/admin/components/cms-color-palette.js';
++import '/admin/components/cms-password-form.js';
+ import '/admin/components/cms-publish-bar.js';
+ 
+ // Az admin felület kerete: munkamenet, belépő képernyő, fejléc, állapotsor és az útvonalak.
+@@ -79,6 +80,7 @@ class CmsApp extends HTMLElement {
+           <div class="cms-menu">
+             <a class="cms-menu-link" id="cms-nav-products" href="#/termekek">${escapeHtml(t.nav.products)}</a>
+             <a class="cms-menu-link" id="cms-nav-colors" href="#/szinek">${escapeHtml(t.nav.colors)}</a>
++            <a class="cms-menu-link" id="cms-nav-password" href="#/jelszo">${escapeHtml(t.nav.password)}</a>
+             <button class="cms-link-button" type="button" id="cms-logout">${escapeHtml(t.logout)}</button>
+           </div>
+         </header>
+@@ -126,6 +128,8 @@ class CmsApp extends HTMLElement {
+     let element;
+     if (route.name === 'palette') {
+       element = document.createElement('cms-color-palette');
++    } else if (route.name === 'password') {
++      element = document.createElement('cms-password-form');
+     } else if (route.name === 'list') {
+       element = document.createElement('cms-product-list');
+       element.setAttribute('category', route.category);
+@@ -143,7 +147,12 @@ class CmsApp extends HTMLElement {
+   // A fejléc menüjében az aktuális rész jelölése.
+   markNav(route) {
+     const onColors = route.name === 'palette';
+-    for (const [id, current] of [['cms-nav-products', !onColors], ['cms-nav-colors', onColors]]) {
++    const onPassword = route.name === 'password';
++    for (const [id, current] of [
++      ['cms-nav-products', !onColors && !onPassword],
++      ['cms-nav-colors', onColors],
++      ['cms-nav-password', onPassword],
++    ]) {
+       const link = this.querySelector(`#${id}`);
+       if (!link) continue;
+       if (current) link.setAttribute('aria-current', 'page');
+diff --git a/admin/components/cms-password-form.js b/admin/components/cms-password-form.js
+new file mode 100644
+index 0000000..db31c0f
+--- /dev/null
++++ b/admin/components/cms-password-form.js
+@@ -0,0 +1,76 @@
++import { api } from '/admin/lib/api.js';
++import { LABELS } from '/admin/lib/labels.js';
++import { escapeHtml } from '/admin/lib/escape.js';
++import { notify } from '/admin/components/cms-toast.js';
++
++const L = LABELS.password;
++const MIN_LENGTH = 10;
++
++// Jelszócsere: jelenlegi jelszó + kétszer az új. A szerver ellenőrzi a szabályokat, itt csak a gyors, helyi visszajelzés van.
++class CmsPasswordForm extends HTMLElement {
++  connectedCallback() {
++    this.innerHTML = `
++      <section class="cms-password">
++        <h1 class="cms-title">${escapeHtml(L.title)}</h1>
++        <p class="cms-muted">${escapeHtml(L.intro)}</p>
++        <form class="cms-card cms-form" novalidate>
++          <div class="cms-field">
++            <label class="cms-label" for="cms-pw-current">${escapeHtml(L.current)}</label>
++            <input class="cms-input" id="cms-pw-current" name="current" type="password" autocomplete="current-password">
++          </div>
++          <div class="cms-field">
++            <label class="cms-label" for="cms-pw-next">${escapeHtml(L.next)}</label>
++            <input class="cms-input" id="cms-pw-next" name="next" type="password" autocomplete="new-password">
++            <p class="cms-hint">${escapeHtml(L.nextHint(MIN_LENGTH))}</p>
++          </div>
++          <div class="cms-field">
++            <label class="cms-label" for="cms-pw-repeat">${escapeHtml(L.repeat)}</label>
++            <input class="cms-input" id="cms-pw-repeat" name="repeat" type="password" autocomplete="new-password">
++          </div>
++          <p class="cms-error" id="cms-pw-error" role="alert" hidden></p>
++          <button class="menu-button cms-submit" type="submit">${escapeHtml(L.submit)}</button>
++        </form>
++      </section>
++    `;
++    this.form = this.querySelector('form');
++    this.errorBox = this.querySelector('#cms-pw-error');
++    this.button = this.querySelector('button[type="submit"]');
++    this.form.addEventListener('submit', (event) => this.onSubmit(event));
++  }
++
++  showError(message, field) {
++    this.errorBox.textContent = message;
++    this.errorBox.hidden = false;
++    this.form.elements[field]?.focus();
++  }
++
++  async onSubmit(event) {
++    event.preventDefault();
++    this.errorBox.hidden = true;
++    const { current, next, repeat } = Object.fromEntries(new FormData(this.form));
++
++    if (!current) return this.showError(L.errors.currentMissing, 'current');
++    if (next.length < MIN_LENGTH) return this.showError(L.errors.tooShort(MIN_LENGTH), 'next');
++    if (next !== repeat) return this.showError(L.errors.mismatch, 'repeat');
++    if (next === current) return this.showError(L.errors.same, 'next');
++
++    this.button.disabled = true;
++    this.button.textContent = L.submitting;
++    try {
++      await api('password', { method: 'POST', body: { current, next } });
++      this.form.reset();
++      notify(L.done);
++    } catch (error) {
++      if (error.status === 401) {
++        this.dispatchEvent(new CustomEvent('cms-session-expired', { bubbles: true }));
++        return;
++      }
++      this.showError(error.message, error.code === 'BAD_CURRENT_PASSWORD' ? 'current' : 'next');
++    } finally {
++      this.button.disabled = false;
++      this.button.textContent = L.submit;
++    }
++  }
++}
++
++customElements.define('cms-password-form', CmsPasswordForm);
+diff --git a/admin/lib/labels.js b/admin/lib/labels.js
+index a02c9ca..86e3b66 100644
+--- a/admin/lib/labels.js
++++ b/admin/lib/labels.js
+@@ -10,9 +10,26 @@ export const LABELS = {
+     submit: 'Belépés',
+     submitting: 'Belépés…',
+   },
++  password: {
++    title: 'Jelszó módosítása',
++    intro: 'Itt cserélheted a belépéshez használt jelszót. A csere után a következő belépéskor már az új jelszót kell megadni.',
++    current: 'Jelenlegi jelszó',
++    next: 'Új jelszó',
++    nextHint: (min) => `Legalább ${min} karakter. Hosszabb, könnyen megjegyezhető mondat is jó.`,
++    repeat: 'Új jelszó még egyszer',
++    submit: 'Jelszó módosítása',
++    submitting: 'Mentés…',
++    done: 'A jelszó megváltozott. Legközelebb az újjal lépj be.',
++    errors: {
++      currentMissing: 'Add meg a jelenlegi jelszót.',
++      tooShort: (min) => `Az új jelszó legalább ${min} karakter legyen.`,
++      mismatch: 'A két új jelszó nem egyezik.',
++      same: 'Az új jelszó különbözzön a jelenlegitől.',
++    },
++  },
+   shell: {
+     logout: 'Kilépés',
+-    nav: { products: 'Termékek', colors: 'Színek' },
++    nav: { products: 'Termékek', colors: 'Színek', password: 'Jelszó' },
+     leaveTitle: 'Nem mentett módosítások',
+     leaveText: 'Nem mentett módosításaid vannak. Ha most továbblépsz, ezek elvesznek.',
+     leaveConfirm: 'Továbblépek mentés nélkül',
+diff --git a/admin/lib/router.js b/admin/lib/router.js
+index 0c8b055..82adf6b 100644
+--- a/admin/lib/router.js
++++ b/admin/lib/router.js
+@@ -2,7 +2,7 @@ import { CATEGORIES } from '../../src/shared/catalog-schema.js';
+ 
+ export const DEFAULT_HASH = `#/termekek/${CATEGORIES[0]}`;
+ 
+-// Hash-útvonalak: #/szinek, #/termekek[/<kategória>], #/termek/<kategória>/<azonosító>, #/uj/<kategória>[/<másolandó azonosító>].
++// Hash-útvonalak: #/szinek, #/jelszo, #/termekek[/<kategória>], #/termek/<kategória>/<azonosító>, #/uj/<kategória>[/<másolandó azonosító>].
+ // Ismeretlen útvonalra null.
+ export function parseRoute(hash) {
+   let parts;
+@@ -13,6 +13,7 @@ export function parseRoute(hash) {
+   }
+   const [name, category, id] = parts;
+   if (name === 'szinek' && parts.length === 1) return { name: 'palette' };
++  if (name === 'jelszo' && parts.length === 1) return { name: 'password' };
+   if (name === 'termekek' && parts.length <= 2 && (parts.length === 1 || CATEGORIES.includes(category))) {
+     return { name: 'list', category: category ?? CATEGORIES[0] };
+   }
+diff --git a/netlify/functions/login.mjs b/netlify/functions/login.mjs
+index b9331d3..1520d20 100644
+--- a/netlify/functions/login.mjs
++++ b/netlify/functions/login.mjs
+@@ -5,10 +5,10 @@ import {
+   clientIp,
+   createRateLimiter,
+   createSessionCookie,
+-  verifyPassword,
+ } from '../lib/auth.mjs';
++import { createCredentials, CredentialStoreError } from '../lib/credentials.mjs';
+ 
+-export function makeHandler(limiter) {
++export function makeHandler(limiter, credentials = createCredentials()) {
+   return async (req, context) => {
+     if (req.method !== 'POST') {
+       return error(405, 'METHOD_NOT_ALLOWED', MESSAGES.METHOD_NOT_ALLOWED, { Allow: 'POST' });
+@@ -27,9 +27,6 @@ export function makeHandler(limiter) {
+     }
+ 
+     try {
+-      const hash = process.env.ADMIN_PASSWORD_HASH;
+-      if (!hash) throw new ConfigError('ADMIN_PASSWORD_HASH hiányzik.');
+-
+       const ip = clientIp(req, context);
+       const state = await limiter.check(ip);
+       if (state.blocked) {
+@@ -38,7 +35,8 @@ export function makeHandler(limiter) {
+         });
+       }
+ 
+-      if (!(await verifyPassword(password, hash))) {
++      const role = await credentials.verify(password);
++      if (!role) {
+         await limiter.fail(ip);
+         return error(401, 'BAD_PASSWORD', 'Hibás jelszó.');
+       }
+@@ -46,6 +44,7 @@ export function makeHandler(limiter) {
+       await limiter.reset(ip);
+       return json({ ok: true }, 200, { 'Set-Cookie': createSessionCookie(req) });
+     } catch (e) {
++      if (e instanceof CredentialStoreError) return error(503, 'CREDENTIAL_STORE', MESSAGES.CREDENTIAL_STORE);
+       if (e instanceof ConfigError) {
+         console.error('Konfigurációs hiba:', e.message);
+         return error(500, 'CONFIG_ERROR', MESSAGES.CONFIG_ERROR);
+diff --git a/netlify/functions/password.mjs b/netlify/functions/password.mjs
+new file mode 100644
+index 0000000..31d4771
+--- /dev/null
++++ b/netlify/functions/password.mjs
+@@ -0,0 +1,56 @@
++// POST /api/password – az ügyfél jelszavának cseréje. Bemenet: { current, next }.
++// A jelenlegi jelszót újra meg kell adni (egy elhagyott, bejelentkezett gép se tudja átvenni az irányítást).
++// A mester jelszó ezzel nem módosítható, és mindig érvényes marad. A hibás "jelenlegi jelszó" ugyanúgy számít
++// a belépési korlátba, mint a hibás belépés.
++import { json, error, MESSAGES } from '../lib/http.mjs';
++import { guardPost, clientIp, createRateLimiter, ConfigError } from '../lib/auth.mjs';
++import { createCredentials, CredentialStoreError, newPasswordError } from '../lib/credentials.mjs';
++
++export function makeHandler(limiter, credentials = createCredentials()) {
++  return async (req, context) => {
++    const denied = guardPost(req);
++    if (denied) return denied;
++
++    let current;
++    let next;
++    try {
++      const body = JSON.parse(await req.text());
++      if (typeof body?.current !== 'string' || typeof body?.next !== 'string') throw new Error('bad');
++      ({ current, next } = body);
++    } catch {
++      return error(400, 'BAD_REQUEST', MESSAGES.BAD_REQUEST);
++    }
++    if (!current || current.length > 200) return error(400, 'BAD_REQUEST', 'Add meg a jelenlegi jelszót.');
++    const problem = newPasswordError(next, current);
++    if (problem) return error(400, 'WEAK_PASSWORD', problem);
++
++    try {
++      const ip = clientIp(req, context);
++      const state = await limiter.check(ip);
++      if (state.blocked) {
++        return error(429, 'TOO_MANY_ATTEMPTS', 'Túl sok próbálkozás. Próbáld újra 15 perc múlva.', {
++          'Retry-After': String(state.retryAfter),
++        });
++      }
++      if (!(await credentials.verify(current))) {
++        await limiter.fail(ip);
++        return error(400, 'BAD_CURRENT_PASSWORD', 'A jelenlegi jelszó hibás.');
++      }
++      await limiter.reset(ip);
++      await credentials.setClientPassword(next);
++      return json({ ok: true });
++    } catch (e) {
++      if (e instanceof CredentialStoreError) return error(503, 'CREDENTIAL_STORE', MESSAGES.PASSWORD_NOT_SAVED);
++      if (e instanceof ConfigError) {
++        console.error('Konfigurációs hiba:', e.message);
++        return error(500, 'CONFIG_ERROR', MESSAGES.CONFIG_ERROR);
++      }
++      console.error('password hiba:', e);
++      return error(500, 'SERVER_ERROR', MESSAGES.SERVER_ERROR);
++    }
++  };
++}
++
++export default makeHandler(createRateLimiter());
++
++export const config = { path: '/api/password' };
+diff --git a/netlify/lib/credentials.mjs b/netlify/lib/credentials.mjs
+new file mode 100644
+index 0000000..eb020ea
+--- /dev/null
++++ b/netlify/lib/credentials.mjs
+@@ -0,0 +1,88 @@
++// A belépési jelszavak kezelése.
++//
++//  - Mester jelszó (MASTER_PASSWORD_HASH, környezeti változó): a fejlesztőé, mindig működik. Az admin felületről
++//    nem változtatható és nem is írható felül, ezért az ügyfél jelszócseréje sosem zárja ki a fejlesztőt.
++//  - Ügyfél jelszó: kezdetben az ADMIN_PASSWORD_HASH környezeti változó; ha az ügyfél az adminban jelszót cserél,
++//    az új hash a Netlify Blobs-ban tárolódik (kulcs: client-password), és onnantól az számít. Sima szövegű
++//    jelszó sehol nem tárolódik, csak scrypt hash.
++//
++// Ha a tár (Blobs) átmenetileg nem olvasható, az ügyfél jelszavát NEM fogadjuk el (különben a régi, már lecserélt
++// jelszó újra működne), a mester jelszó viszont ilyenkor is működik. Ha a Blobs a környezetben egyáltalán nincs
++// beállítva (pl. helyi fejlesztés), nem lehet felülírt jelszó, ezért a környezeti változó érvényes.
++import { hashPassword, verifyPassword, ConfigError } from './auth.mjs';
++
++export const MIN_PASSWORD_LENGTH = 10;
++export const MAX_PASSWORD_LENGTH = 200;
++const KEY = 'client-password';
++
++// A jelszótár átmenetileg nem elérhető: nem lehet eldönteni, érvényes-e az ügyfél jelszava.
++export class CredentialStoreError extends Error {
++  constructor(message) {
++    super(message);
++    this.name = 'CredentialStoreError';
++  }
++}
++
++async function defaultStore() {
++  const { getStore } = await import('@netlify/blobs');
++  // erős konzisztencia: a jelszócsere minden példányon azonnal érvényes legyen
++  return getStore({ name: 'cms-auth', consistency: 'strong' });
++}
++
++const notConfigured = (e) => e?.name === 'MissingBlobsEnvironmentError';
++
++export function createCredentials({ getStore = defaultStore, env = () => process.env, now = () => new Date() } = {}) {
++  // Az ügyfél jelenleg érvényes hash-e: a tárban lévő, különben a környezeti változó (vagy null).
++  async function clientHash() {
++    let stored = null;
++    try {
++      const store = await getStore();
++      stored = await store.get(KEY, { type: 'json' });
++    } catch (e) {
++      if (!notConfigured(e)) {
++        console.error('jelszótár olvasási hiba:', e?.message);
++        throw new CredentialStoreError('A jelszótár nem érhető el.');
++      }
++    }
++    if (stored && typeof stored.hash === 'string') return stored.hash;
++    return env().ADMIN_PASSWORD_HASH || null;
++  }
++
++  return {
++    // Visszaad: 'master' | 'client' | null (hibás jelszó). Dob: ConfigError (nincs semmilyen jelszó beállítva),
++    // CredentialStoreError (az ügyfél jelszava nem ellenőrizhető).
++    async verify(password) {
++      const master = env().MASTER_PASSWORD_HASH;
++      if (master && (await verifyPassword(password, master))) return 'master';
++
++      const hash = await clientHash();
++      if (!hash) {
++        if (master) return null;
++        throw new ConfigError('ADMIN_PASSWORD_HASH és MASTER_PASSWORD_HASH sem található.');
++      }
++      return (await verifyPassword(password, hash)) ? 'client' : null;
++    },
++
++    // Új ügyfél jelszó mentése (hash-ként). Dob: CredentialStoreError, ha nem menthető.
++    async setClientPassword(password) {
++      const hash = await hashPassword(password);
++      try {
++        const store = await getStore();
++        await store.setJSON(KEY, { hash, changedAt: now().toISOString() });
++      } catch (e) {
++        console.error('jelszótár írási hiba:', e?.message);
++        throw new CredentialStoreError('A jelszó nem menthető.');
++      }
++    },
++  };
++}
++
++// Az új jelszó ellenőrzése: visszaad egy magyar hibaüzenetet, vagy '' ha rendben van.
++export function newPasswordError(password, current) {
++  if (typeof password !== 'string' || password === '') return 'Add meg az új jelszót.';
++  if (password.length < MIN_PASSWORD_LENGTH) return `Az új jelszó legalább ${MIN_PASSWORD_LENGTH} karakter legyen.`;
++  if (password.length > MAX_PASSWORD_LENGTH) return `Az új jelszó legfeljebb ${MAX_PASSWORD_LENGTH} karakter lehet.`;
++  if (password === current) return 'Az új jelszó különbözzön a jelenlegitől.';
++  if (password.trim() !== password) return 'Az új jelszó elején és végén ne legyen szóköz.';
++  return '';
++}
+diff --git a/netlify/lib/http.mjs b/netlify/lib/http.mjs
+index 720a899..bc8d8cc 100644
+--- a/netlify/lib/http.mjs
++++ b/netlify/lib/http.mjs
+@@ -30,6 +30,8 @@ export const MESSAGES = {
+   DATA_INVALID: 'A katalógusfájl hiányzik vagy hibás. Szólj a fejlesztőnek.',
+   VALIDATION: 'A mentés nem sikerült: javítsd a jelölt mezőket.',
+   TOO_LARGE: 'A feltöltés túl nagy.',
++  CREDENTIAL_STORE: 'A belépés most átmenetileg nem érhető el. Próbáld újra egy perc múlva.',
++  PASSWORD_NOT_SAVED: 'A jelszót most nem sikerült elmenteni. Próbáld újra egy perc múlva.',
+   RELOAD: 'A weboldal közben frissült, ezért az előnézet újratöltődött. Nézd át a módosításokat, és publikálj újra.',
+   NOTHING_TO_PUBLISH: 'Nincs publikálandó módosítás.',
+ };
+diff --git a/scripts/hash-password.mjs b/scripts/hash-password.mjs
+index 27bac1b..83d5deb 100644
+--- a/scripts/hash-password.mjs
++++ b/scripts/hash-password.mjs
+@@ -1,4 +1,6 @@
+-// Az admin jelszó hash-ének előállítása. Futtatás: npm run hash-password
++// Jelszó-hash előállítása. Futtatás:
++//   npm run hash-password            → ADMIN_PASSWORD_HASH (az ügyfél kezdő jelszava)
++//   npm run hash-password -- master  → MASTER_PASSWORD_HASH (a fejlesztő mester jelszava, mindig működik)
+ // A jelszót nem argumentumként kéri (az bekerülne a shell előzményeibe), hanem rejtett beírással.
+ 
+ import readline from 'node:readline';
+@@ -27,7 +29,10 @@ function ask(question) {
+   });
+ }
+ 
+-const password = await ask('Új admin jelszó (min. 12 karakter): ');
++const master = process.argv.includes('master');
++const variable = master ? 'MASTER_PASSWORD_HASH' : 'ADMIN_PASSWORD_HASH';
++
++const password = await ask(master ? 'Mester jelszó (min. 12 karakter): ' : 'Új admin jelszó (min. 12 karakter): ');
+ if (password.length < 12) {
+   console.error('A jelszó túl rövid (min. 12 karakter).');
+   rl.close();
+@@ -41,7 +46,11 @@ if (again !== password) {
+ }
+ 
+ console.log('\nÁllítsd be a Netlify környezeti változói között:\n');
+-console.log(`ADMIN_PASSWORD_HASH=${await hashPassword(password)}`);
+-console.log('\nHa még nincs SESSION_SECRET, ez egy új, véletlen érték hozzá:\n');
+-console.log(`SESSION_SECRET=${randomBytes(48).toString('base64url')}`);
+-console.log('\nFigyelem: a SESSION_SECRET cseréje minden bejelentkezett felhasználót kiléptet.');
++console.log(`${variable}=${await hashPassword(password)}`);
++if (!master) {
++  console.log('\nHa még nincs SESSION_SECRET, ez egy új, véletlen érték hozzá:\n');
++  console.log(`SESSION_SECRET=${randomBytes(48).toString('base64url')}`);
++  console.log('\nFigyelem: a SESSION_SECRET cseréje minden bejelentkezett felhasználót kiléptet.');
++} else {
++  console.log('\nA mester jelszó az adminból nem módosítható; cseréjéhez ezt a változót kell átírni a Netlify-on.');
++}
+diff --git a/tests/credentials.test.mjs b/tests/credentials.test.mjs
+new file mode 100644
+index 0000000..b58a6e3
+--- /dev/null
++++ b/tests/credentials.test.mjs
+@@ -0,0 +1,182 @@
++import { test, beforeEach } from 'node:test';
++import assert from 'node:assert/strict';
++import { hashPassword, createRateLimiter, ConfigError } from '../netlify/lib/auth.mjs';
++import {
++  createCredentials,
++  CredentialStoreError,
++  newPasswordError,
++  MIN_PASSWORD_LENGTH,
++} from '../netlify/lib/credentials.mjs';
++import { makeHandler as makeLogin } from '../netlify/functions/login.mjs';
++import { makeHandler as makePassword } from '../netlify/functions/password.mjs';
++import { createSessionCookie } from '../netlify/lib/auth.mjs';
++
++const ORIGIN = 'https://www.balazspavaj.ro';
++
++class FakeStore {
++  constructor() {
++    this.data = new Map();
++    this.failGet = null;
++    this.failSet = null;
++  }
++  async get(key) {
++    if (this.failGet) throw this.failGet;
++    return this.data.has(key) ? structuredClone(this.data.get(key)) : null;
++  }
++  async setJSON(key, value) {
++    if (this.failSet) throw this.failSet;
++    this.data.set(key, structuredClone(value));
++  }
++  async delete(key) {
++    this.data.delete(key);
++  }
++}
++
++function post(path, body, headers = {}) {
++  return new Request(`${ORIGIN}${path}`, {
++    method: 'POST',
++    headers: { origin: ORIGIN, 'content-type': 'application/json', ...headers },
++    body: JSON.stringify(body),
++  });
++}
++const cookieOf = (res) => res.headers.get('set-cookie').split(';')[0];
++const authed = () => ({ cookie: cookieOf({ headers: new Headers({ 'set-cookie': createSessionCookie(new Request(ORIGIN)) }) }) });
++
++let store;
++let env;
++let credentials;
++let login;
++let password;
++
++beforeEach(async () => {
++  process.env.SESSION_SECRET = 'x'.repeat(48);
++  store = new FakeStore();
++  env = {
++    ADMIN_PASSWORD_HASH: await hashPassword('ugyfel-kezdo-jelszo'),
++    MASTER_PASSWORD_HASH: await hashPassword('mester-jelszo-12345'),
++  };
++  credentials = createCredentials({ getStore: async () => store, env: () => env });
++  const limiter = createRateLimiter(async () => store);
++  login = makeLogin(limiter, credentials);
++  password = makePassword(limiter, credentials);
++});
++
++test('verify: kezdő ügyfél jelszó, mester jelszó és hibás jelszó', async () => {
++  assert.equal(await credentials.verify('ugyfel-kezdo-jelszo'), 'client');
++  assert.equal(await credentials.verify('mester-jelszo-12345'), 'master');
++  assert.equal(await credentials.verify('valami-mas'), null);
++});
++
++test('jelszócsere után az új ügyfél jelszó és a mester működik, a régi nem', async () => {
++  await credentials.setClientPassword('uj-ugyfel-jelszo-1');
++  assert.equal(await credentials.verify('uj-ugyfel-jelszo-1'), 'client');
++  assert.equal(await credentials.verify('ugyfel-kezdo-jelszo'), null);
++  assert.equal(await credentials.verify('mester-jelszo-12345'), 'master');
++  const saved = store.data.get('client-password');
++  assert.match(saved.hash, /^scrypt:/);
++  assert.ok(!JSON.stringify(saved).includes('uj-ugyfel-jelszo-1'), 'sima szöveg nem tárolódik');
++});
++
++test('verify: nincs semmilyen jelszó beállítva → ConfigError; csak mester van → ügyfél jelszó hibás', async () => {
++  env = {};
++  await assert.rejects(() => credentials.verify('barmi'), ConfigError);
++  env = { MASTER_PASSWORD_HASH: await hashPassword('mester-jelszo-12345') };
++  assert.equal(await credentials.verify('barmi'), null);
++  assert.equal(await credentials.verify('mester-jelszo-12345'), 'master');
++});
++
++test('a tár hibája: az ügyfél nem léphet be, a mester igen', async () => {
++  await credentials.setClientPassword('uj-ugyfel-jelszo-1');
++  store.failGet = new Error('boom');
++  await assert.rejects(() => credentials.verify('ugyfel-kezdo-jelszo'), CredentialStoreError);
++  await assert.rejects(() => credentials.verify('uj-ugyfel-jelszo-1'), CredentialStoreError);
++  assert.equal(await credentials.verify('mester-jelszo-12345'), 'master');
++});
++
++test('ha a Blobs nincs beállítva (helyi fejlesztés), a környezeti változó érvényes', async () => {
++  const missing = Object.assign(new Error('nincs'), { name: 'MissingBlobsEnvironmentError' });
++  store.failGet = missing;
++  assert.equal(await credentials.verify('ugyfel-kezdo-jelszo'), 'client');
++});
++
++test('mentési hiba → CredentialStoreError, a régi jelszó marad', async () => {
++  store.failSet = new Error('boom');
++  await assert.rejects(() => credentials.setClientPassword('uj-ugyfel-jelszo-1'), CredentialStoreError);
++  assert.equal(await credentials.verify('ugyfel-kezdo-jelszo'), 'client');
++});
++
++test('új jelszó szabályai', () => {
++  assert.equal(newPasswordError('hosszu-jelszo-123', 'regi'), '');
++  assert.match(newPasswordError('', 'x'), /Add meg/);
++  assert.match(newPasswordError('rovid', 'x'), new RegExp(String(MIN_PASSWORD_LENGTH)));
++  assert.match(newPasswordError('a'.repeat(201), 'x'), /legfeljebb/);
++  assert.match(newPasswordError('ugyanaz-a-jelszo', 'ugyanaz-a-jelszo'), /különbözzön/);
++  assert.match(newPasswordError(' szokozos-jelszo ', 'x'), /szóköz/);
++});
++
++test('login végpont: mester jelszó mindig beléptet, jelszócsere után a régi ügyfél jelszó nem', async () => {
++  assert.equal((await login(post('/api/login', { password: 'ugyfel-kezdo-jelszo' }))).status, 200);
++  await credentials.setClientPassword('uj-ugyfel-jelszo-1');
++  assert.equal((await login(post('/api/login', { password: 'ugyfel-kezdo-jelszo' }))).status, 401);
++  assert.equal((await login(post('/api/login', { password: 'uj-ugyfel-jelszo-1' }))).status, 200);
++  assert.equal((await login(post('/api/login', { password: 'mester-jelszo-12345' }))).status, 200);
++});
++
++test('login végpont: tárhiba → 503 az ügyfélnek, 200 a mesternek', async () => {
++  store.failGet = new Error('boom');
++  const client = await login(post('/api/login', { password: 'ugyfel-kezdo-jelszo' }));
++  assert.equal(client.status, 503);
++  assert.equal((await client.json()).code, 'CREDENTIAL_STORE');
++  assert.equal((await login(post('/api/login', { password: 'mester-jelszo-12345' }))).status, 200);
++});
++
++test('password végpont: munkamenet nélkül 401, hibás Origin 403', async () => {
++  const res = await password(post('/api/password', { current: 'ugyfel-kezdo-jelszo', next: 'uj-ugyfel-jelszo-1' }));
++  assert.equal(res.status, 401);
++  const bad = await password(post('/api/password', { current: 'a', next: 'b' }, { ...authed(), origin: 'https://evil.example' }));
++  assert.equal(bad.status, 403);
++});
++
++test('password végpont: sikeres csere, utána az új jelszóval lehet belépni', async () => {
++  const res = await password(post('/api/password', { current: 'ugyfel-kezdo-jelszo', next: 'uj-ugyfel-jelszo-1' }, authed()));
++  assert.equal(res.status, 200);
++  assert.equal((await login(post('/api/login', { password: 'uj-ugyfel-jelszo-1' }))).status, 200);
++  assert.equal((await login(post('/api/login', { password: 'ugyfel-kezdo-jelszo' }))).status, 401);
++});
++
++test('password végpont: hibás jelenlegi jelszó, gyenge új jelszó, hibás törzs', async () => {
++  const wrong = await password(post('/api/password', { current: 'nem-ez-a-jelszo', next: 'uj-ugyfel-jelszo-1' }, authed()));
++  assert.equal(wrong.status, 400);
++  assert.equal((await wrong.json()).code, 'BAD_CURRENT_PASSWORD');
++  assert.equal(store.data.has('client-password'), false);
++
++  const weak = await password(post('/api/password', { current: 'ugyfel-kezdo-jelszo', next: 'rovid' }, authed()));
++  assert.equal(weak.status, 400);
++  assert.equal((await weak.json()).code, 'WEAK_PASSWORD');
++
++  const bad = await password(post('/api/password', { current: 5 }, authed()));
++  assert.equal(bad.status, 400);
++  assert.equal(store.data.has('client-password'), false);
++});
++
++test('password végpont: a mester jelszó "jelenlegiként" új ügyfél jelszót állít (elfelejtett jelszó), a mester marad', async () => {
++  const res = await password(post('/api/password', { current: 'mester-jelszo-12345', next: 'uj-ugyfel-jelszo-1' }, authed()));
++  assert.equal(res.status, 200);
++  assert.equal((await login(post('/api/login', { password: 'uj-ugyfel-jelszo-1' }))).status, 200);
++  assert.equal((await login(post('/api/login', { password: 'mester-jelszo-12345' }))).status, 200);
++});
++
++test('password végpont: mentési hiba → 503, a jelszó nem változik; a hibás próbák korlátozva vannak', async () => {
++  store.failSet = new Error('boom');
++  const res = await password(post('/api/password', { current: 'ugyfel-kezdo-jelszo', next: 'uj-ugyfel-jelszo-1' }, authed()));
++  assert.equal(res.status, 503);
++  assert.equal((await login(post('/api/login', { password: 'ugyfel-kezdo-jelszo' }))).status, 200);
++
++  store.failSet = null;
++  for (let i = 0; i < 5; i += 1) {
++    const r = await password(post('/api/password', { current: `rossz-${i}`, next: 'uj-ugyfel-jelszo-1' }, authed()), { ip: '1.2.3.4' });
++    assert.equal(r.status, 400);
++  }
++  const blocked = await password(post('/api/password', { current: 'ugyfel-kezdo-jelszo', next: 'uj-ugyfel-jelszo-1' }, authed()), { ip: '1.2.3.4' });
++  assert.equal(blocked.status, 429);
++});
+-- 
+2.43.0
+

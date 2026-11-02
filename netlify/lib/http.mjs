@@ -30,6 +30,8 @@ export const MESSAGES = {
   DATA_INVALID: 'A katalógusfájl hiányzik vagy hibás. Szólj a fejlesztőnek.',
   VALIDATION: 'A mentés nem sikerült: javítsd a jelölt mezőket.',
   TOO_LARGE: 'A feltöltés túl nagy.',
+  CREDENTIAL_STORE: 'A belépés most átmenetileg nem érhető el. Próbáld újra egy perc múlva.',
+  PASSWORD_NOT_SAVED: 'A jelszót most nem sikerült elmenteni. Próbáld újra egy perc múlva.',
   RELOAD: 'A weboldal közben frissült, ezért az előnézet újratöltődött. Nézd át a módosításokat, és publikálj újra.',
   NOTHING_TO_PUBLISH: 'Nincs publikálandó módosítás.',
 };
