@@ -44,6 +44,7 @@ export function createGithub(config, fetchImpl = globalThis.fetch) {
       }
       throw new GithubError(response.status, `GitHub ${method} ${path} → ${response.status}`, text);
     }
+    if (raw === 'buffer') return Buffer.from(await response.arrayBuffer());
     if (raw) return response.text();
     if (response.status === 204) return null;
     return response.json();
@@ -86,6 +87,16 @@ export function createGithub(config, fetchImpl = globalThis.fetch) {
     async readFile(path, ref) {
       try {
         return await request('GET', `/contents/${encodePath(path)}?ref=${encodeURIComponent(ref)}`, { raw: true });
+      } catch (e) {
+        if (e instanceof GithubError && e.status === 404) return null;
+        throw e;
+      }
+    },
+
+    // A fájl bájtjai (pl. kép) az adott ref-en, vagy null, ha nincs ilyen fájl.
+    async readBuffer(path, ref) {
+      try {
+        return await request('GET', `/contents/${encodePath(path)}?ref=${encodeURIComponent(ref)}`, { raw: 'buffer' });
       } catch (e) {
         if (e instanceof GithubError && e.status === 404) return null;
         throw e;

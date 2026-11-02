@@ -6,7 +6,10 @@ import { duplicateOf, findProduct, ChangeError } from '/admin/lib/catalog-ops.js
 import { slugify } from '/admin/lib/slug.js';
 import { confirmDialog } from '/admin/lib/dialog.js';
 import { notify } from '/admin/components/cms-toast.js';
+import { assetUrl } from '/admin/lib/assets.js';
+import { hasImage, releaseAll, assignUploadPaths, toUploadList } from '/admin/lib/image-slots.js';
 import '/admin/components/cms-repeater.js';
+import '/admin/components/cms-image-input.js';
 
 const T = LABELS.editor;
 const dotted = (path) => path.replace(/\[(\d+)\]/g, '.$1');
@@ -42,6 +45,10 @@ class CmsProductEditor extends HTMLElement {
     }
     this.render();
     this.refreshPreview();
+  }
+
+  disconnectedCallback() {
+    if (this.form) releaseAll(this.form); // a kiválasztott, még nem mentett képek helyi előnézeti címei
   }
 
   renderNotFound(category) {
@@ -189,6 +196,7 @@ class CmsProductEditor extends HTMLElement {
       newItem: () => newRow.size(),
       addLabel: T.sizeAdd,
       renderRow: (row, i) => this.sizeRowHtml(row, i),
+      afterRender: (repeater) => this.mountImageInputs(repeater),
     });
     this.colorsRepeater = this.querySelector('#cms-colors').configure({
       items: f.colors,
@@ -196,6 +204,7 @@ class CmsProductEditor extends HTMLElement {
       addLabel: T.colorAdd,
       emptyText: T.colorsNone,
       renderRow: (row, i) => this.colorRowHtml(row, i),
+      afterRender: (repeater) => this.mountImageInputs(repeater),
     });
     this.typesRepeater = this.querySelector('#cms-types').configure({
       items: f.types,
@@ -203,6 +212,7 @@ class CmsProductEditor extends HTMLElement {
       addLabel: T.typeAdd,
       renderRow: (row, i) => this.typeRowHtml(row, i),
     });
+    this.mountImageInputs(this);
     this.updateColorTools();
 
     const form = this.querySelector('form');
@@ -218,12 +228,24 @@ class CmsProductEditor extends HTMLElement {
   }
 
   imageHtml() {
-    const image = this.form.base?.image;
     return `
-      <div class="cms-image-note">
-        ${image ? `<img class="cms-thumb cms-thumb-large" src="${escapeHtml(image)}" alt="" width="96" height="96">` : `<p class="cms-muted">${escapeHtml(T.imageNone)}</p>`}
-        <p class="cms-hint">${escapeHtml(T.imageNote)}</p>
+      <div class="cms-field">
+        <cms-image-input data-slot="image" data-error-key="image"></cms-image-input>
+        <p class="cms-hint">${escapeHtml(T.imageHint)}</p>
       </div>`;
+  }
+
+  // A repeater-sorok és a fő kép képválasztóinak bekötése az űrlapmodell képhelyeihez.
+  mountImageInputs(root) {
+    for (const el of root.querySelectorAll('cms-image-input:not([data-ready])')) {
+      const path = el.dataset.slot;
+      const slot = path.split('.').reduce((node, key) => node[key], this.form);
+      el.dataset.ready = '1';
+      el.configure({ slot, errorKey: path, compact: el.hasAttribute('compact'), onChange: () => {
+          this.clearErrors(); // a korábbi mentési hibák már nem biztos, hogy fennállnak
+          this.markDirty();
+        } });
+    }
   }
 
   sizeRowHtml(row, i) {
@@ -231,7 +253,11 @@ class CmsProductEditor extends HTMLElement {
       ${this.field({ id: `cms-size-name-${i}`, label: T.sizeName, errorKey: `sizes.${i}.name`, extraClass: 'cms-field-grow',
         control: this.textInput({ id: `cms-size-name-${i}`, bind: `sizes.${i}.name`, value: row.name }) })}
       ${this.field({ id: `cms-size-dim-${i}`, label: T.sizeDimensions, errorKey: `sizes.${i}.dimensions`, extraClass: 'cms-field-grow',
-        control: this.textInput({ id: `cms-size-dim-${i}`, bind: `sizes.${i}.dimensions`, value: row.dimensions }) })}`;
+        control: this.textInput({ id: `cms-size-dim-${i}`, bind: `sizes.${i}.dimensions`, value: row.dimensions }) })}
+      <div class="cms-field cms-field-full">
+        <span class="cms-label">${escapeHtml(T.imageOptional)}</span>
+        <cms-image-input compact data-slot="sizes.${i}.image"></cms-image-input>
+      </div>`;
   }
 
   paletteOptions(selected) {
@@ -261,7 +287,11 @@ class CmsProductEditor extends HTMLElement {
         <p class="cms-field-error" data-error-for="colors.${i}.name" hidden></p>
       </div>
       ${this.field({ id: `cms-color-price-${i}`, label: T.colorPrice, hint: T.colorPriceHint, errorKey: `colors.${i}.price`, extraClass: 'cms-field-grow',
-        control: this.textInput({ id: `cms-color-price-${i}`, bind: `colors.${i}.price`, value: row.price, inputmode: 'decimal' }) })}`;
+        control: this.textInput({ id: `cms-color-price-${i}`, bind: `colors.${i}.price`, value: row.price, inputmode: 'decimal' }) })}
+      <div class="cms-field cms-field-full">
+        <span class="cms-label">${escapeHtml(T.imageOptional)}</span>
+        <cms-image-input compact data-slot="colors.${i}.image"></cms-image-input>
+      </div>`;
   }
 
   typeRowHtml(row, i) {
@@ -344,7 +374,7 @@ class CmsProductEditor extends HTMLElement {
     const f = this.form;
     const next = radio.value;
     if (next === f.sizeMode) return;
-    if (next === 'single' && f.sizes.some((row) => row.orig?.image)) {
+    if (next === 'single' && f.sizes.some((row) => hasImage(row.image))) {
       const ok = await confirmDialog({
         title: T.sizesDropTitle,
         messageHtml: escapeHtml(T.sizesDropImages),
@@ -387,7 +417,8 @@ class CmsProductEditor extends HTMLElement {
     const { product } = fromForm(f);
     const palette = store.get().draft.colors;
     const unit = LABELS.unitShort[product.unit] ?? product.unit;
-    const image = product.image || product.colors?.find((c) => c.image)?.image || '';
+    const slotSrc = (slot) => slot.previewUrl || assetUrl(slot.path, store.get().mainImages);
+    const image = slotSrc(f.image) || f.colors.map((row) => slotSrc(row.image)).find(Boolean) || '';
     const price = product.price ?? (f.priceMode === 'range' ? `${f.priceFrom} - ${f.priceTo}` : f.priceFrom);
     const swatches = (product.colors || [])
       .map((c) => {
@@ -454,16 +485,46 @@ class CmsProductEditor extends HTMLElement {
 
     const f = this.form;
     const state = store.get();
+    this.setSaving(true);
+    let uploads;
+    try {
+      // az új képek végleges fájlneve a (végleges) azonosítóból és a kép tartalmából készül
+      uploads = await toUploadList(await assignUploadPaths(f, state.assetsPrefix));
+    } catch {
+      this.setSaving(false);
+      this.showErrors([{ path: '', message: LABELS.image.errors.DECODE }], { title: T.saveFailed });
+      return;
+    }
     const check = applyForm(state.draft.products, state.draft.colors, f);
     if (!check.products) {
+      this.setSaving(false);
       this.showErrors(check.errors);
+      return;
+    }
+    if (uploads.reduce((sum, u) => sum + u.base64.length, 0) > 5_800_000) {
+      this.setSaving(false);
+      this.showErrors([{ path: '', message: T.imageTooMuch }], { title: T.saveFailed });
       return;
     }
 
     const name = f.name.trim();
-    this.setSaving(true);
+    if (check.warnings.some((w) => w.path === 'image')) {
+      this.setSaving(false);
+      const proceed = await confirmDialog({
+        title: T.noImageTitle,
+        messageHtml: escapeHtml(T.noImageMessage),
+        confirmLabel: T.noImageSave,
+        cancelLabel: T.noImageBack,
+      });
+      if (!proceed) {
+        this.querySelector('cms-image-input[data-slot="image"] button')?.focus();
+        return;
+      }
+      this.setSaving(true);
+    }
     try {
       await store.save({
+        uploads,
         apply: (products) => {
           const result = applyForm(products, store.get().draft.colors, f);
           if (!result.products) throw new ChangeError(result.errors[0]?.message ?? T.errorsTitle);
@@ -473,8 +534,9 @@ class CmsProductEditor extends HTMLElement {
       });
       store.setDirty(false);
       notify(`${T.saved(name)} ${T.previewRefresh}`);
-      if (check.warnings.length) {
-        notify(`${T.warningsTitle} ${[...new Set(check.warnings.map((w) => w.message))].join(' ')}`, { type: 'warn' });
+      const late = check.warnings.filter((w) => w.path !== 'image'); // a képről már rákérdeztünk
+      if (late.length) {
+        notify(`${T.warningsTitle} ${[...new Set(late.map((w) => w.message))].join(' ')}`, { type: 'warn' });
       }
       location.hash = `#/termekek/${f.category}`;
     } catch (error) {

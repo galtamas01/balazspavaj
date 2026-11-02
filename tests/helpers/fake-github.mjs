@@ -170,7 +170,7 @@ export class FakeGitHub {
     }
     if (method === 'GET' && (m = path.match(/^\/contents\/(.+)$/))) {
       const buffer = this.fileBuffer(u.searchParams.get('ref'), m[1]);
-      return buffer ? new Response(buffer.toString('utf8'), { status: 200 }) : json(404, { message: 'Not Found' });
+      return buffer ? new Response(buffer, { status: 200 }) : json(404, { message: 'Not Found' });
     }
     return json(404, { message: `Nem támogatott végpont: ${method} ${path}` });
   }
