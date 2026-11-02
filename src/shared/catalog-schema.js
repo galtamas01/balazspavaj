@@ -116,6 +116,11 @@ export function validateColors(colors) {
   for (const [name, def] of Object.entries(colors)) {
     const path = `colors.${name}`;
     if (!checkText(issues, path, name, 'Színnév', { max: 40 })) continue;
+    if (name.includes('"')) {
+      // a weboldal a színnevet HTML-attribútumba írja
+      issues.push({ path, message: 'Színnév: az idézőjel (") nem használható.' });
+      continue;
+    }
     if (!isObject(def)) {
       issues.push({ path, message: `${name}: hibás szerkezet.` });
       continue;
