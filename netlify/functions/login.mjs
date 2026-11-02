@@ -5,10 +5,10 @@ import {
   clientIp,
   createRateLimiter,
   createSessionCookie,
-  verifyPassword,
 } from '../lib/auth.mjs';
+import { createCredentials, CredentialStoreError } from '../lib/credentials.mjs';
 
-export function makeHandler(limiter) {
+export function makeHandler(limiter, credentials = createCredentials()) {
   return async (req, context) => {
     if (req.method !== 'POST') {
       return error(405, 'METHOD_NOT_ALLOWED', MESSAGES.METHOD_NOT_ALLOWED, { Allow: 'POST' });
@@ -27,9 +27,6 @@ export function makeHandler(limiter) {
     }
 
     try {
-      const hash = process.env.ADMIN_PASSWORD_HASH;
-      if (!hash) throw new ConfigError('ADMIN_PASSWORD_HASH hiányzik.');
-
       const ip = clientIp(req, context);
       const state = await limiter.check(ip);
       if (state.blocked) {
@@ -38,7 +35,8 @@ export function makeHandler(limiter) {
         });
       }
 
-      if (!(await verifyPassword(password, hash))) {
+      const role = await credentials.verify(password);
+      if (!role) {
         await limiter.fail(ip);
         return error(401, 'BAD_PASSWORD', 'Hibás jelszó.');
       }
@@ -46,6 +44,7 @@ export function makeHandler(limiter) {
       await limiter.reset(ip);
       return json({ ok: true }, 200, { 'Set-Cookie': createSessionCookie(req) });
     } catch (e) {
+      if (e instanceof CredentialStoreError) return error(503, 'CREDENTIAL_STORE', MESSAGES.CREDENTIAL_STORE);
       if (e instanceof ConfigError) {
         console.error('Konfigurációs hiba:', e.message);
         return error(500, 'CONFIG_ERROR', MESSAGES.CONFIG_ERROR);

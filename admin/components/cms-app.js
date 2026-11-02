@@ -8,6 +8,7 @@ import '/admin/components/cms-toast.js';
 import '/admin/components/cms-product-list.js';
 import '/admin/components/cms-product-editor.js';
 import '/admin/components/cms-color-palette.js';
+import '/admin/components/cms-password-form.js';
 import '/admin/components/cms-publish-bar.js';
 
 // Az admin felület kerete: munkamenet, belépő képernyő, fejléc, állapotsor és az útvonalak.
@@ -79,6 +80,7 @@ class CmsApp extends HTMLElement {
           <div class="cms-menu">
             <a class="cms-menu-link" id="cms-nav-products" href="#/termekek">${escapeHtml(t.nav.products)}</a>
             <a class="cms-menu-link" id="cms-nav-colors" href="#/szinek">${escapeHtml(t.nav.colors)}</a>
+            <a class="cms-menu-link" id="cms-nav-password" href="#/jelszo">${escapeHtml(t.nav.password)}</a>
             <button class="cms-link-button" type="button" id="cms-logout">${escapeHtml(t.logout)}</button>
           </div>
         </header>
@@ -126,6 +128,8 @@ class CmsApp extends HTMLElement {
     let element;
     if (route.name === 'palette') {
       element = document.createElement('cms-color-palette');
+    } else if (route.name === 'password') {
+      element = document.createElement('cms-password-form');
     } else if (route.name === 'list') {
       element = document.createElement('cms-product-list');
       element.setAttribute('category', route.category);
@@ -143,7 +147,12 @@ class CmsApp extends HTMLElement {
   // A fejléc menüjében az aktuális rész jelölése.
   markNav(route) {
     const onColors = route.name === 'palette';
-    for (const [id, current] of [['cms-nav-products', !onColors], ['cms-nav-colors', onColors]]) {
+    const onPassword = route.name === 'password';
+    for (const [id, current] of [
+      ['cms-nav-products', !onColors && !onPassword],
+      ['cms-nav-colors', onColors],
+      ['cms-nav-password', onPassword],
+    ]) {
       const link = this.querySelector(`#${id}`);
       if (!link) continue;
       if (current) link.setAttribute('aria-current', 'page');
