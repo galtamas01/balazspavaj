@@ -16,6 +16,11 @@ export const LABELS = {
     welcomeText:
       'A belépés működik. A termékek és színek kezelése a következő lépésben érkezik ide.',
   },
+  catalog: {
+    title: 'Kapcsolat a katalógussal',
+    checking: 'Ellenőrzés…',
+    ok: (products, colors) => `Rendben: ${products} termék és ${colors} szín betöltve.`,
+  },
   errors: {
     NETWORK: 'Nincs kapcsolat a szerverrel. Ellenőrizd az internetkapcsolatot, és próbáld újra.',
     GENERIC: 'Váratlan hiba történt. Próbáld újra egy perc múlva.',

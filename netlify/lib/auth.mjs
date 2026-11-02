@@ -118,6 +118,15 @@ export function checkOrigin(req) {
   return originHost === urlHost || (!!hostHeader && originHost === hostHeader);
 }
 
+// Védett GET végpontok elejére: nincs munkamenet → 401, különben null.
+export function guardGet(req) {
+  if (req.method !== 'GET') {
+    return error(405, 'METHOD_NOT_ALLOWED', MESSAGES.METHOD_NOT_ALLOWED, { Allow: 'GET' });
+  }
+  if (!readSession(req)) return error(401, 'UNAUTHORIZED', MESSAGES.UNAUTHORIZED);
+  return null;
+}
+
 // Védett POST végpontok elejére: hibás Origin → 403, nincs munkamenet → 401, különben null.
 export function guardPost(req) {
   if (req.method !== 'POST') {

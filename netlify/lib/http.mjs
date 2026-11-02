@@ -23,4 +23,10 @@ export const MESSAGES = {
   UNAUTHORIZED: 'A munkamenet lejárt. Jelentkezz be újra.',
   CONFIG_ERROR: 'A rendszer beállítása hiányos. Szólj a fejlesztőnek.',
   SERVER_ERROR: 'Váratlan hiba történt. Próbáld újra egy perc múlva.',
+  STALE: 'Közben máshol is módosult a katalógus. Frissítsd az oldalt, és vidd át újra a módosításaidat.',
+  GITHUB_AUTH: 'A tárhely-hozzáférés nem működik (lejárt vagy hibás token?). Szólj a fejlesztőnek.',
+  GITHUB_ERROR: 'A tárhely most nem érhető el. Próbáld újra egy perc múlva.',
+  DATA_INVALID: 'A katalógusfájl hiányzik vagy hibás. Szólj a fejlesztőnek.',
+  VALIDATION: 'A mentés nem sikerült: javítsd a jelölt mezőket.',
+  TOO_LARGE: 'A feltöltés túl nagy.',
 };

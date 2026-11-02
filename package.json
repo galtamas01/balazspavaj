@@ -2,6 +2,7 @@
   "name": "balazspavaj",
   "version": "1.0.0",
   "private": true,
+  "type": "module",
   "description": "Balázs Pavaj weboldal. A weboldal build nélküli statikus oldal; a package.json csak a Netlify Functions (CMS) függőségeit és a teszteket szolgálja.",
   "engines": {
     "node": ">=22.12.0"
