@@ -17,6 +17,7 @@ export class FakeGitHub {
     this.failNext = null;
     this.lastHeaders = null;
     this.counter = 0;
+    this.clock = () => new Date(); // a commitok időbélyege (a tesztek átállíthatják)
 
     const entries = new Map();
     for (const [path, content] of Object.entries(files)) {
@@ -39,7 +40,7 @@ export class FakeGitHub {
   }
   _commit(tree, parents, message) {
     const sha = sha1('commit', tree, ...parents, message, String(++this.counter));
-    this.commits.set(sha, { tree, parents, message });
+    this.commits.set(sha, { tree, parents, message, seq: this.counter, date: this.clock().toISOString() });
     return sha;
   }
   _resolve(ref) {
@@ -56,6 +57,27 @@ export class FakeGitHub {
       stack.push(...this.commits.get(c).parents);
     }
     return false;
+  }
+
+  _ancestors(sha) {
+    const seen = new Set();
+    const stack = [sha];
+    while (stack.length) {
+      const c = stack.pop();
+      if (seen.has(c)) continue;
+      seen.add(c);
+      stack.push(...this.commits.get(c).parents);
+    }
+    return seen;
+  }
+  // Legutóbbi közös ős (egyszerű történeteknél a legnagyobb sorszámú közös commit).
+  _mergeBase(a, b) {
+    const other = this._ancestors(b);
+    const common = [...this._ancestors(a)].filter((c) => other.has(c));
+    return common.sort((x, y) => this.commits.get(y).seq - this.commits.get(x).seq)[0] ?? null;
+  }
+  _entries(sha) {
+    return sha ? this.trees.get(this.commits.get(sha).tree) : new Map();
   }
 
   // ---- ellenőrző segédek a tesztekhez ----
@@ -171,6 +193,64 @@ export class FakeGitHub {
     if (method === 'GET' && (m = path.match(/^\/contents\/(.+)$/))) {
       const buffer = this.fileBuffer(u.searchParams.get('ref'), m[1]);
       return buffer ? new Response(buffer, { status: 200 }) : json(404, { message: 'Not Found' });
+    }
+    if (method === 'GET' && (m = path.match(/^\/compare\/(.+)\.\.\.(.+)$/))) {
+      const base = this._resolve(m[1]);
+      const head = this._resolve(m[2]);
+      if (!base || !head) return json(404, { message: 'Not Found' });
+      const inBase = this._ancestors(base);
+      const inHead = this._ancestors(head);
+      const mergeBase = this._mergeBase(base, head);
+      const before = this._entries(mergeBase);
+      const after = this._entries(head);
+      const files = [];
+      for (const p of new Set([...before.keys(), ...after.keys()])) {
+        if (before.get(p)?.sha !== after.get(p)?.sha) files.push({ filename: p });
+      }
+      return json(200, {
+        ahead_by: [...inHead].filter((c) => !inBase.has(c)).length,
+        behind_by: [...inBase].filter((c) => !inHead.has(c)).length,
+        files,
+      });
+    }
+    if (method === 'POST' && path === '/merges') {
+      const baseSha = this.refs.get(body.base);
+      const headSha = this._resolve(body.head);
+      if (!baseSha || !headSha) return json(404, { message: 'Not Found' });
+      if (this._isAncestor(headSha, baseSha)) return new Response(null, { status: 204 });
+      if (this._isAncestor(baseSha, headSha)) {
+        this.refs.set(body.base, headSha);
+        return json(201, { sha: headSha });
+      }
+      const ancestor = this._entries(this._mergeBase(baseSha, headSha));
+      const ours = this._entries(baseSha);
+      const theirs = this._entries(headSha);
+      const merged = new Map();
+      for (const p of new Set([...ancestor.keys(), ...ours.keys(), ...theirs.keys()])) {
+        const [a, o, t] = [ancestor.get(p), ours.get(p), theirs.get(p)];
+        let pick;
+        if (o?.sha === t?.sha) pick = o;
+        else if (o?.sha === a?.sha) pick = t;
+        else if (t?.sha === a?.sha) pick = o;
+        else return json(409, { message: 'Merge conflict' }); // fájl-szintű közelítés (a valódi GitHub soronként fésül)
+        if (pick) merged.set(p, pick);
+      }
+      const sha = this._commit(this._tree(merged), [baseSha, headSha], body.commit_message ?? 'merge');
+      this.refs.set(body.base, sha);
+      return json(201, { sha });
+    }
+    if (method === 'GET' && path === '/commits') {
+      const start = this._resolve(u.searchParams.get('sha'));
+      if (!start) return json(404, { message: 'Not Found' });
+      const since = u.searchParams.get('since');
+      const perPage = Number(u.searchParams.get('per_page') || 30);
+      const page = Number(u.searchParams.get('page') || 1);
+      const rows = [...this._ancestors(start)]
+        .map((sha) => ({ sha, ...this.commits.get(sha) }))
+        .filter((c) => !since || c.date >= since)
+        .sort((x, y) => y.seq - x.seq)
+        .map((c) => ({ sha: c.sha, commit: { message: c.message } }));
+      return json(200, rows.slice((page - 1) * perPage, page * perPage));
     }
     return json(404, { message: `Nem támogatott végpont: ${method} ${path}` });
   }

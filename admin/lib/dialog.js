@@ -11,7 +11,7 @@ export function confirmDialog({ title, messageHtml, confirmLabel = LABELS.dialog
     dialog.innerHTML = `
       <form method="dialog" class="cms-dialog-body">
         <h2 class="cms-dialog-title" id="cms-dialog-title">${escapeHtml(title)}</h2>
-        <p class="cms-dialog-text">${messageHtml}</p>
+        <div class="cms-dialog-text">${messageHtml}</div>
         <div class="cms-dialog-actions">
           <button type="submit" value="cancel" class="cms-btn" ${danger ? 'autofocus' : ''}>${escapeHtml(cancelLabel)}</button>
           <button type="submit" value="ok" class="cms-btn ${danger ? 'cms-btn-danger' : 'cms-btn-primary'}" ${danger ? '' : 'autofocus'}>${escapeHtml(confirmLabel)}</button>
