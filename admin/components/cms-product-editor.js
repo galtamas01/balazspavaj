@@ -508,6 +508,20 @@ class CmsProductEditor extends HTMLElement {
     }
 
     const name = f.name.trim();
+    if (check.warnings.some((w) => w.path === 'image')) {
+      this.setSaving(false);
+      const proceed = await confirmDialog({
+        title: T.noImageTitle,
+        messageHtml: escapeHtml(T.noImageMessage),
+        confirmLabel: T.noImageSave,
+        cancelLabel: T.noImageBack,
+      });
+      if (!proceed) {
+        this.querySelector('cms-image-input[data-slot="image"] button')?.focus();
+        return;
+      }
+      this.setSaving(true);
+    }
     try {
       await store.save({
         uploads,
@@ -520,8 +534,9 @@ class CmsProductEditor extends HTMLElement {
       });
       store.setDirty(false);
       notify(`${T.saved(name)} ${T.previewRefresh}`);
-      if (check.warnings.length) {
-        notify(`${T.warningsTitle} ${[...new Set(check.warnings.map((w) => w.message))].join(' ')}`, { type: 'warn' });
+      const late = check.warnings.filter((w) => w.path !== 'image'); // a képről már rákérdeztünk
+      if (late.length) {
+        notify(`${T.warningsTitle} ${[...new Set(late.map((w) => w.message))].join(' ')}`, { type: 'warn' });
       }
       location.hash = `#/termekek/${f.category}`;
     } catch (error) {

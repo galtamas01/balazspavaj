@@ -202,7 +202,7 @@ test('új termék: azonosító, ütközés, kötelező mezők', () => {
 
   form = emptyForm('borduri');
   result = applyForm(products, colors, form);
-  assert.ok(['id', 'name', 'price', 'dimensions', 'image'].every((p) => result.errors.some((e) => e.path === p)));
+  assert.ok(['id', 'name', 'price', 'dimensions'].every((p) => result.errors.some((e) => e.path === p)));
 
   form = emptyForm('borduri');
   Object.assign(form, { name: 'Teszt', id: '123', priceFrom: '5', dimensions: 'x' });

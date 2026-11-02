@@ -135,16 +135,21 @@ test('űrlap: a kép cseréje, eltávolítása és megtartása a termék JSON-ba
   assert.match(added.image, /^\/assets\/pavaje\/autoblocant-6cm_mist_[0-9a-f]{8}\.webp$/);
 });
 
-test('új termék: fő kép kötelező, meglévőnél nem', () => {
+test('kép nélkül menthető, de figyelmeztetést ad (új és meglévő terméknél is)', () => {
   const form = emptyForm('borduri');
   Object.assign(form, { name: 'Teszt', id: 'teszt', priceFrom: '5', dimensions: '1x1' });
-  assert.ok(applyForm(products, colors, form).errors.some((e) => e.path === 'image'));
+  const bare = applyForm(products, colors, form);
+  assert.equal(bare.errors.some((e) => e.path === 'image'), false, 'nem hiba');
+  assert.ok(bare.products, 'kép nélkül is létrejön a termék');
+  assert.ok(bare.warnings.some((w) => w.path === 'image'), 'de figyelmeztet');
+
   setSlotBlob(form.image, { blob: blob('k'), previewUrl: '' });
-  assert.deepEqual(fromForm(form).errors.filter((e) => e.path === 'image'), [], 'a kiválasztott (még nem feltöltött) kép is megfelel');
+  assert.equal(applyForm(products, colors, form).warnings.some((w) => w.path === 'image'), false, 'a kiválasztott (még nem feltöltött) kép is megfelel');
 
   const existing = toForm('borduri', 'bordura-mic', products.borduri['bordura-mic']);
   clearSlot(existing.image);
-  assert.equal(fromForm(existing).errors.some((e) => e.path === 'image'), false, 'meglévő termék kép nélkül is menthető');
+  assert.equal(applyForm(products, colors, existing).errors.some((e) => e.path === 'image'), false, 'meglévő termék kép nélkül is menthető');
+  assert.ok(applyForm(products, colors, existing).warnings.some((w) => w.path === 'image'));
 });
 
 test('másolat: a képek ugyanarra a fájlra mutatnak, útvonal-kijelölés nélkül is', () => {

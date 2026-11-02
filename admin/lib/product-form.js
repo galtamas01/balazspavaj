@@ -139,10 +139,15 @@ export function fromForm(form) {
   }
 
   product.image = imagePath(form.image);
-  if (form.isNew && !hasImage(form.image)) {
-    errors.push({ path: 'image', message: 'Tölts fel egy fő képet a termékhez.' });
-  }
   return { product, errors };
+}
+
+export const IMAGE_MISSING_WARNING = 'A termékhez nincs kép feltöltve.';
+
+// Van-e a terméknek bármilyen képe (fő kép, vagy szín-/méretsor képe, ami a fő kép helyett szolgál).
+export function hasAnyImage(form) {
+  if (hasImage(form.image)) return true;
+  return [...form.colors, ...form.sizes].some((row) => hasImage(row.image));
 }
 
 // Az űrlap alkalmazása a katalógusra + teljes ellenőrzés (ugyanaz a séma, mint a szerveren).
@@ -154,6 +159,8 @@ export function applyForm(products, colors, form) {
   const id = form.id.trim();
   const errors = [...local];
   const warnings = [];
+  // Kép nélkül is menthető, de a terméklap és a lista kép nélkül hiányosan néz ki: figyelmeztetés, nem hiba.
+  if (!hasAnyImage(form)) warnings.push({ path: 'image', message: IMAGE_MISSING_WARNING });
 
   if (!id) {
     errors.push({ path: 'id', message: 'Az azonosító a névből készül, adj meg egy nevet.' });
