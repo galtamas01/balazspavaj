@@ -590,7 +590,7 @@
 }
 
 #contact-bg {
-  background-image: url('/contact_bg.png');
+  background-image: url('/assets/contact_bg.webp');
   background-size: cover;
   background-position: center;
   background-repeat: no-repeat;

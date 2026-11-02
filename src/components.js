@@ -118,7 +118,7 @@ class ProductCategories extends HTMLElement {
                     <a href="/produse/pavaje.html">
                         <div class="product fade-in fade-delay-1">
                         <div class="product-card-image">
-                            <img src="/assets/category_pavaj.png" alt="Product image">
+                            <img src="/assets/category_pavaj.webp" alt="Pavaje" width="800" height="800" loading="lazy" decoding="async">
                         </div>
                         <div class="product-card-text">
                             <h3>Pavaje</h3>
@@ -129,7 +129,7 @@ class ProductCategories extends HTMLElement {
                     <a href="/produse/premium-pavaje.html">
                         <div class="product fade-in fade-delay-2">
                         <div class="product-card-image">
-                            <img src="/assets/category_premium.png" alt="Product image">
+                            <img src="/assets/category_premium.webp" alt="Pavaje premium" width="800" height="800" loading="lazy" decoding="async">
                         </div>
                         <div class="product-card-text">
                             <h3>Pavaje Premium</h3>
@@ -140,7 +140,7 @@ class ProductCategories extends HTMLElement {
                     <a href="/produse/borduri.html">
                         <div class="product fade-in fade-delay-3">
                         <div class="product-card-image">
-                            <img src="/assets/category_bordura.png" alt="Product image">
+                            <img src="/assets/category_bordura.webp" alt="Borduri" width="800" height="800" loading="lazy" decoding="async">
                         </div>
                         <div class="product-card-text">
                             <h3>Borduri</h3>
@@ -151,7 +151,7 @@ class ProductCategories extends HTMLElement {
                     <a href="/produse/rigole.html">
                         <div class="product fade-in fade-delay-4">
                         <div class="product-card-image">
-                            <img src="/assets/category_rigola.png" alt="Product image">
+                            <img src="/assets/category_rigola.webp" alt="Rigole" width="800" height="800" loading="lazy" decoding="async">
                         </div>
                         <div class="product-card-text">
                             <h3>Rigole</h3>
