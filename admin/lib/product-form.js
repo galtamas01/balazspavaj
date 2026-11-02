@@ -8,6 +8,7 @@
 import { validateCatalog } from '../../src/shared/catalog-schema.js';
 import { normalizePrice, buildPrice, samePrice, splitPrice } from './price.js';
 import { slugify } from './slug.js';
+import { emptySlot, slotFromPath, imagePath, hasImage } from './image-slots.js';
 import { addProduct, replaceProduct, renameProductId, ChangeError } from './catalog-ops.js';
 
 const clone = (value) => structuredClone(value);
@@ -20,6 +21,7 @@ export function emptyForm(category) {
     id: '',
     idManual: false,
     base: null,
+    image: emptySlot(),
     name: '',
     unit: 'mp',
     priceMode: 'single',
@@ -43,6 +45,7 @@ export function toForm(category, id, product, { isNew = false } = {}) {
     id: isNew ? '' : id,
     idManual: false,
     base: clone(product),
+    image: slotFromPath(product.image),
     name: String(product.name ?? ''),
     unit: product.unit ?? 'mp',
     priceMode: price.mode,
@@ -50,18 +53,25 @@ export function toForm(category, id, product, { isNew = false } = {}) {
     priceTo: price.to,
     sizeMode: Array.isArray(product.sizes) ? 'multi' : 'single',
     dimensions: String(product.dimensions ?? ''),
-    sizes: (product.sizes || []).map((s) => ({ name: String(s.name ?? ''), dimensions: String(s.dimensions ?? ''), orig: clone(s) })),
-    colors: (product.colors || []).map((c) => ({ name: String(c.name ?? ''), price: String(c.price ?? ''), orig: clone(c) })),
+    sizes: (product.sizes || []).map((s) => ({ name: String(s.name ?? ''), dimensions: String(s.dimensions ?? ''), image: slotFromPath(s.image), orig: clone(s) })),
+    colors: (product.colors || []).map((c) => ({ name: String(c.name ?? ''), price: String(c.price ?? ''), image: slotFromPath(c.image), orig: clone(c) })),
     types: (product.type || []).map((t) => ({ name: String(t.name ?? ''), price: String(t.price ?? ''), orig: clone(t) })),
   };
 }
 
 // Új sor értékei az ismétlődő listákba.
 export const newRow = {
-  size: () => ({ name: '', dimensions: '', orig: null }),
-  color: (name = '') => ({ name, price: '', orig: null }),
+  size: () => ({ name: '', dimensions: '', image: emptySlot(), orig: null }),
+  color: (name = '') => ({ name, price: '', image: emptySlot(), orig: null }),
   type: () => ({ name: '', price: '', orig: null }),
 };
+
+// Szín- és méretsor képe: ha van, beírja; ha nincs, a mezőt elhagyja.
+function setImage(entry, slot) {
+  const path = imagePath(slot);
+  if (path) entry.image = path;
+  else delete entry.image;
+}
 
 // Az űrlapmodellből termék. A hibák mező-útvonalai a séma útvonalaival egyeznek (pl. colors[0].price).
 export function fromForm(form) {
@@ -86,6 +96,7 @@ export function fromForm(form) {
         const entry = row.orig ? clone(row.orig) : {};
         entry.name = row.name.trim();
         entry.dimensions = row.dimensions.trim();
+        setImage(entry, row.image);
         return entry;
       });
     }
@@ -99,6 +110,7 @@ export function fromForm(form) {
     product.colors = form.colors.map((row, i) => {
       const entry = row.orig ? clone(row.orig) : {};
       entry.name = row.name;
+      setImage(entry, row.image);
       const text = row.price.trim();
       if (text === '') {
         delete entry.price;
@@ -126,7 +138,10 @@ export function fromForm(form) {
     delete product.type;
   }
 
-  if (!('image' in product)) product.image = '';
+  product.image = imagePath(form.image);
+  if (form.isNew && !hasImage(form.image)) {
+    errors.push({ path: 'image', message: 'Tölts fel egy fő képet a termékhez.' });
+  }
   return { product, errors };
 }
 

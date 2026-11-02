@@ -55,6 +55,7 @@ test('save: a baseSha-val küld, és az új sha-t átveszi', async () => {
   assert.equal(store.get().draft.products.pavaje.a.price, '2');
   assert.equal(calls[1][1].baseSha, 'd1');
   assert.equal(calls[1][1].message, 'Módosítás: A');
+  assert.deepEqual(calls[1][1].uploads, []);
   assert.equal(store.get().busy, false);
 });
 
@@ -119,4 +120,19 @@ test('dirty jelző', async () => {
   store.setDirty(true);
   assert.equal(store.get().dirty, true);
   assert.equal(notified, 1);
+});
+
+test('save: a feltöltendő képeket elküldi, a prefixet a katalógusból veszi', async () => {
+  const bodies = [];
+  const api = async (name, opts) => {
+    if (name === 'catalog') return { ...catalog('d1', '1'), assetsPrefix: '/assets/teszt/' };
+    bodies.push(opts.body);
+    return { ok: true, draftSha: 'd2', changed: true, warnings: [] };
+  };
+  const store = createStore(api);
+  assert.equal(store.get().assetsPrefix, '/assets/pavaje/');
+  await store.load();
+  assert.equal(store.get().assetsPrefix, '/assets/teszt/');
+  await store.save({ apply: (p) => p, message: 'x', uploads: [{ path: '/assets/teszt/a.webp', base64: 'AAAA' }] });
+  assert.deepEqual(bodies[0].uploads, [{ path: '/assets/teszt/a.webp', base64: 'AAAA' }]);
 });

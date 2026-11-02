@@ -43,6 +43,7 @@ export function makeHandler(getGithub) {
         draftSha,
         mainSha,
         previewUrl: github.config.previewUrl || '',
+        assetsPrefix: `/${github.config.assetsDir}/`,
       });
     } catch (e) {
       return toResponse(e);

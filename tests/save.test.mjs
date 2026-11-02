@@ -83,6 +83,7 @@ test('catalog: munkamenet kell, csak GET, és létrehozza a cms-draft ágat', as
   assert.equal(data.draftSha, fake.head('main'));
   assert.equal(data.mainSha, fake.head('main'));
   assert.equal(data.previewUrl, 'https://cms-draft--balazspavaj.netlify.app');
+  assert.equal(data.assetsPrefix, '/assets/pavaje/');
 });
 
 test('catalog: hiányzó colors.json üres palettát ad, hiányzó products.json adathiba', async () => {

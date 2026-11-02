@@ -5,6 +5,7 @@ import { diffCatalog, productStatus } from '/admin/lib/diff.js';
 import { moveProduct, removeProduct } from '/admin/lib/catalog-ops.js';
 import { confirmDialog } from '/admin/lib/dialog.js';
 import { notify } from '/admin/components/cms-toast.js';
+import { assetUrl } from '/admin/lib/assets.js';
 import { CATEGORIES } from '/src/shared/catalog-schema.js';
 
 const L = LABELS.list;
@@ -68,14 +69,14 @@ class CmsProductList extends HTMLElement {
     list.innerHTML = visible
       .map(([id, product]) => {
         const index = items.findIndex(([key]) => key === id);
-        return this.rowHtml({ id, product, index, last: items.length - 1, diff, busy: state.busy, searching, previewUrl: state.previewUrl });
+        return this.rowHtml({ id, product, index, last: items.length - 1, diff, busy: state.busy, searching, previewUrl: state.previewUrl, mainImages: state.mainImages });
       })
       .join('');
   }
 
-  rowHtml({ id, product, index, last, diff, busy, searching, previewUrl }) {
+  rowHtml({ id, product, index, last, diff, busy, searching, previewUrl, mainImages }) {
     const status = productStatus(diff, this.category, id);
-    const image = product.image || product.colors?.find((c) => c.image)?.image || '';
+    const image = assetUrl(product.image || product.colors?.find((c) => c.image)?.image || '', mainImages);
     const unit = LABELS.unitShort[product.unit] ?? product.unit;
     const meta = [`${escapeHtml(product.price)} RON / ${escapeHtml(unit)}`];
     if (product.colors?.length) meta.push(escapeHtml(L.colorsCount(product.colors.length)));

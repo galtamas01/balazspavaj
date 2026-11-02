@@ -9,6 +9,8 @@ import {
 } from '../admin/lib/catalog-ops.js';
 import { emptyForm, toForm, fromForm, applyForm, newRow } from '../admin/lib/product-form.js';
 import { parseRoute } from '../admin/lib/router.js';
+import { assetUrl } from '../admin/lib/assets.js';
+import { slotFromPath } from '../admin/lib/image-slots.js';
 import { serializeCatalog } from '../src/shared/catalog-schema.js';
 
 const read = (p) => fs.readFileSync(new URL(`../${p}`, import.meta.url), 'utf8');
@@ -186,11 +188,12 @@ test('új termék: azonosító, ütközés, kötelező mezők', () => {
   form.id = 'bordura-noua-50';
   form.priceFrom = '12.5';
   form.dimensions = '50x20x8 cm';
+  form.image = slotFromPath('/assets/pavaje/bordura-noua-50_ab12cd34.webp');
   let result = applyForm(products, colors, form);
   assert.deepEqual(result.errors, []);
   assert.deepEqual(Object.keys(result.products.borduri['bordura-noua-50']), ['name', 'image', 'dimensions', 'price', 'unit']);
   assert.equal(result.products.borduri['bordura-noua-50'].price, '12,50');
-  assert.equal(result.products.borduri['bordura-noua-50'].image, '');
+  assert.equal(result.products.borduri['bordura-noua-50'].image, '/assets/pavaje/bordura-noua-50_ab12cd34.webp');
   assert.equal(ids(result.products, 'borduri').at(-1), 'bordura-noua-50');
 
   form.id = 'paleti'; // más kategóriában foglalt
@@ -199,7 +202,7 @@ test('új termék: azonosító, ütközés, kötelező mezők', () => {
 
   form = emptyForm('borduri');
   result = applyForm(products, colors, form);
-  assert.ok(['id', 'name', 'price', 'dimensions'].every((p) => result.errors.some((e) => e.path === p)));
+  assert.ok(['id', 'name', 'price', 'dimensions', 'image'].every((p) => result.errors.some((e) => e.path === p)));
 
   form = emptyForm('borduri');
   Object.assign(form, { name: 'Teszt', id: '123', priceFrom: '5', dimensions: 'x' });
@@ -208,7 +211,7 @@ test('új termék: azonosító, ütközés, kötelező mezők', () => {
 
 test('új termék több mérettel, színnel és típussal', () => {
   const form = emptyForm('rigole');
-  Object.assign(form, { name: 'Rigolă test', id: 'rigola-test', priceMode: 'range', priceFrom: '10', priceTo: '20', sizeMode: 'multi' });
+  Object.assign(form, { name: 'Rigolă test', id: 'rigola-test', priceMode: 'range', priceFrom: '10', priceTo: '20', sizeMode: 'multi', image: slotFromPath('/assets/pavaje/rigola-test_00000000.webp') });
   form.sizes.push({ ...newRow.size(), name: 'Mic', dimensions: '10x10' });
   form.types.push({ ...newRow.type(), name: 'zincat', price: '15.5' });
   const ok = applyForm(products, colors, form);
@@ -251,4 +254,12 @@ test('útvonalak', () => {
   for (const bad of ['', '#', '#/', '#/termekek/nincs', '#/termek/pavaje', '#/termek/nincs/x', '#/uj', '#/uj/nincs', '#/x', '#/termek/pavaje/%E0%A4%A']) {
     assert.equal(parseRoute(bad), null, bad);
   }
+});
+
+test('képcímek: ami a main-ben is megvan, közvetlen; a többi az /api/image-en át', () => {
+  const main = new Set(['/assets/pavaje/a.webp']);
+  assert.equal(assetUrl('/assets/pavaje/a.webp', main), '/assets/pavaje/a.webp');
+  assert.equal(assetUrl('/assets/pavaje/uj_1234abcd.webp', main), '/api/image?path=%2Fassets%2Fpavaje%2Fuj_1234abcd.webp');
+  assert.equal(assetUrl('', main), '');
+  assert.equal(assetUrl('/assets/pavaje/a.webp', undefined), '/assets/pavaje/a.webp');
 });
