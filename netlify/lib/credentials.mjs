@@ -29,6 +29,17 @@ async function defaultStore() {
   return getStore({ name: 'cms-auth', consistency: 'strong' });
 }
 
+// A környezeti változóba gyakran bekerül felesleg: szóköz/sortörés, idézőjel, vagy a kiírt sor eleje
+// (`MASTER_PASSWORD_HASH=`). Ezeket levesszük; a hash maga `scrypt:<só>:<hash>` alakú.
+export function cleanHash(value, name = '') {
+  let text = String(value ?? '').trim();
+  if (name && text.startsWith(`${name}=`)) text = text.slice(name.length + 1).trim();
+  text = text.replace(/^["']+|["']+$/g, '').trim();
+  return text;
+}
+
+export const isHashFormat = (value) => /^scrypt:[A-Za-z0-9_-]+:[A-Za-z0-9_-]+$/.test(value);
+
 const notConfigured = (e) => e?.name === 'MissingBlobsEnvironmentError';
 
 export function createCredentials({ getStore = defaultStore, env = () => process.env, now = () => new Date() } = {}) {
@@ -45,14 +56,17 @@ export function createCredentials({ getStore = defaultStore, env = () => process
       }
     }
     if (stored && typeof stored.hash === 'string') return stored.hash;
-    return env().ADMIN_PASSWORD_HASH || null;
+    return cleanHash(env().ADMIN_PASSWORD_HASH, 'ADMIN_PASSWORD_HASH') || null;
   }
 
   return {
     // Visszaad: 'master' | 'client' | null (hibás jelszó). Dob: ConfigError (nincs semmilyen jelszó beállítva),
     // CredentialStoreError (az ügyfél jelszava nem ellenőrizhető).
     async verify(password) {
-      const master = env().MASTER_PASSWORD_HASH;
+      const master = cleanHash(env().MASTER_PASSWORD_HASH, 'MASTER_PASSWORD_HASH');
+      if (master && !isHashFormat(master)) {
+        console.error('MASTER_PASSWORD_HASH formátuma hibás (scrypt:<só>:<hash> kell), a mester jelszó nem használható.');
+      }
       if (master && (await verifyPassword(password, master))) return 'master';
 
       const hash = await clientHash();
@@ -60,7 +74,11 @@ export function createCredentials({ getStore = defaultStore, env = () => process
         if (master) return null;
         throw new ConfigError('ADMIN_PASSWORD_HASH és MASTER_PASSWORD_HASH sem található.');
       }
-      return (await verifyPassword(password, hash)) ? 'client' : null;
+      if (await verifyPassword(password, hash)) return 'client';
+      // Sikertelen belépés: jelezzük a naplóban, ha a mester jelszó azért nem működhet, mert nincs beállítva
+      // ebben a deployban (a jelszó értéke soha nem kerül a naplóba).
+      if (!master) console.warn('Sikertelen belépés, és a MASTER_PASSWORD_HASH nincs beállítva ebben a deployban.');
+      return null;
     },
 
     // Új ügyfél jelszó mentése (hash-ként). Dob: CredentialStoreError, ha nem menthető.

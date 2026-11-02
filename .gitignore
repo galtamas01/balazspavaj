@@ -27,3 +27,6 @@ dist-ssr
 .env
 .env.*
 .netlify
+
+# Fejlesztői patch fájlok (nem a repó részei)
+*.patch

@@ -1175,3 +1175,30 @@ cms-publish-bar {
 .cms-password .cms-form {
   padding: 1.25rem;
 }
+
+/* ---- Hálózati állapot ---- */
+
+.cms-offline {
+  padding: 0.6rem 16px;
+  background: rgba(176, 33, 38, 0.1);
+  border-bottom: 2px solid var(--custom-red);
+  color: var(--custom-red-dark);
+  font-weight: 600;
+  line-height: 1.4;
+}
+
+.cms-offline[hidden] {
+  display: none;
+}
+
+/* A lap címe fókuszt kap oldalváltáskor, de nem kell keret köré */
+.cms-main h1:focus {
+  outline: none;
+}
+
+/* A terméklistában a név egész sora érintésre elég nagy */
+.cms-item-name {
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+}

@@ -5,6 +5,8 @@ import {
   createCredentials,
   CredentialStoreError,
   newPasswordError,
+  cleanHash,
+  isHashFormat,
   MIN_PASSWORD_LENGTH,
 } from '../netlify/lib/credentials.mjs';
 import { makeHandler as makeLogin } from '../netlify/functions/login.mjs';
@@ -179,4 +181,35 @@ test('password végpont: mentési hiba → 503, a jelszó nem változik; a hibá
   }
   const blocked = await password(post('/api/password', { current: 'ugyfel-kezdo-jelszo', next: 'uj-ugyfel-jelszo-1' }, authed()), { ip: '1.2.3.4' });
   assert.equal(blocked.status, 429);
+});
+
+test('cleanHash: szóköz, idézőjel és a NAME= előtag levétele', async () => {
+  const hash = await hashPassword('mester-jelszo-12345');
+  for (const messy of [hash, ` ${hash}\n`, `"${hash}"`, `'${hash}'`, `MASTER_PASSWORD_HASH=${hash}`, `MASTER_PASSWORD_HASH="${hash}" `]) {
+    assert.equal(cleanHash(messy, 'MASTER_PASSWORD_HASH'), hash);
+    assert.equal(isHashFormat(cleanHash(messy, 'MASTER_PASSWORD_HASH')), true);
+  }
+  assert.equal(isHashFormat('valami'), false);
+});
+
+test('verify: a hibásan bemásolt (idézőjeles, előtagos) mester hash is működik', async () => {
+  env.MASTER_PASSWORD_HASH = `MASTER_PASSWORD_HASH="${await hashPassword('mester-jelszo-12345')}"\n`;
+  assert.equal(await credentials.verify('mester-jelszo-12345'), 'master');
+});
+
+test('verify: hibás formátumú mester hash naplózódik, a jelszó értéke nem', async (t) => {
+  const logs = [];
+  t.mock.method(console, 'error', (...a) => logs.push(a.join(' ')));
+  env.MASTER_PASSWORD_HASH = 'nem-hash';
+  assert.equal(await credentials.verify('mester-jelszo-12345'), null);
+  assert.ok(logs.some((l) => l.includes('MASTER_PASSWORD_HASH formátuma hibás')));
+  assert.ok(!logs.join(' ').includes('mester-jelszo-12345'));
+});
+
+test('verify: ha nincs mester hash, a sikertelen belépés figyelmeztetést naplóz', async (t) => {
+  const warns = [];
+  t.mock.method(console, 'warn', (...a) => warns.push(a.join(' ')));
+  delete env.MASTER_PASSWORD_HASH;
+  assert.equal(await credentials.verify('rossz'), null);
+  assert.ok(warns.some((w) => w.includes('nincs beállítva')));
 });

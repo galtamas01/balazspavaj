@@ -9,7 +9,15 @@ export const LABELS = {
     password: 'Jelszó',
     submit: 'Belépés',
     submitting: 'Belépés…',
+    missing: 'Add meg a jelszót.',
   },
+  reauth: {
+    title: 'A munkamenet lejárt',
+    text: 'Biztonsági okból újra be kell lépned. Ami még nincs elmentve, az megmarad: belépés után folytatódik a mentés.',
+    submit: 'Belépés',
+    cancel: 'Kilépés',
+  },
+  offline: 'Nincs internetkapcsolat. Amíg vissza nem áll, a módosítások nem menthetők.',
   password: {
     title: 'Jelszó módosítása',
     intro: 'Itt cserélheted a belépéshez használt jelszót. A csere után a következő belépéskor már az új jelszót kell megadni.',
@@ -35,6 +43,7 @@ export const LABELS = {
     leaveConfirm: 'Továbblépek mentés nélkül',
     leaveCancel: 'Maradok',
     loadErrorTitle: 'A termékek betöltése nem sikerült',
+    pageTitle: { palette: 'Színek', password: 'Jelszó', newProduct: 'Új termék', editProduct: 'Termék szerkesztése' },
   },
   categories: {
     pavaje: 'Térkő',
@@ -173,7 +182,7 @@ export const LABELS = {
     cancel: 'Mégse',
     errorsTitle: 'Nem sikerült a mentés. Javítsd a jelölt mezőket:',
     saveFailed: 'Nem sikerült a mentés:',
-    saved: (name) => `Mentve: ${name}`,
+    saved: (name) => `Mentve: ${name}.`,
     previewRefresh: 'Az előnézet kb. 1 percen belül frissül.',
     warningsTitle: 'Mentve, de ezekre érdemes figyelni:',
     previewCard: { from: 'Ár', noImage: 'Nincs kép', sizes: 'Méretek', types: 'Típusok' },

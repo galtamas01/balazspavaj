@@ -3,7 +3,7 @@
 import { ChangeError } from './catalog-ops.js';
 import { collectImagePaths } from '../../src/shared/catalog-schema.js';
 
-export function createStore(api) {
+export function createStore(api, { networkRetryDelayMs = 1500 } = {}) {
   let state = {
     status: 'idle', // idle | loading | ready | error
     error: null,
@@ -79,7 +79,12 @@ export function createStore(api) {
     if (state.busy) throw new ChangeError('Egy másik mentés még folyamatban van.');
     set({ busy: true, busyKind: 'save' });
     try {
-      for (let attempt = 0; ; attempt += 1) {
+      // Egy-egy újrapróba: elavult állapotnál (409) újratöltéssel, hálózati hibánál rövid várakozás után.
+      // Ha az első kérés valójában célba ért, de a válasz elveszett, az újrapróba 409-et kap, újratölt, és
+      // az `apply` az új adaton már nem változtat (nincs dupla commit).
+      let staleRetried = false;
+      let networkRetried = false;
+      for (;;) {
         const { products, colors } = apply(state.draft);
         try {
           const result = await api('save', {
@@ -89,8 +94,14 @@ export function createStore(api) {
           set({ draft: { products, colors }, draftSha: result.draftSha });
           return { warnings: result.warnings || [], changed: Boolean(result.changed) };
         } catch (error) {
-          if (error.status === 409 && attempt === 0) {
+          if (error.status === 409 && !staleRetried) {
+            staleRetried = true;
             await refresh();
+            continue;
+          }
+          if (error.code === 'NETWORK' && !networkRetried) {
+            networkRetried = true;
+            await new Promise((resolve) => setTimeout(resolve, networkRetryDelayMs));
             continue;
           }
           throw error;

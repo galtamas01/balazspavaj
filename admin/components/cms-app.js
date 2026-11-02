@@ -1,4 +1,5 @@
-import { api } from '/admin/lib/api.js';
+import { api, setReauthHandler } from '/admin/lib/api.js';
+import { reauthenticate } from '/admin/lib/reauth.js';
 import { LABELS } from '/admin/lib/labels.js';
 import { escapeHtml } from '/admin/lib/escape.js';
 import { store } from '/admin/lib/catalog.js';
@@ -21,6 +22,12 @@ class CmsApp extends HTMLElement {
         event.returnValue = '';
       }
     };
+    // Lejárt munkamenetnél az ablak előbb újra beléptet, és a kérés megismétlődik (a szerkesztett munka megmarad).
+    // A belépő képernyőn nincs mit megőrizni, ott a kérés egyszerűen 401-et kap.
+    setReauthHandler(() => (this.view?.isConnected && !this.querySelector('cms-login') ? reauthenticate() : Promise.resolve(false)));
+    this.onOnline = () => this.updateOffline();
+    window.addEventListener('online', this.onOnline);
+    window.addEventListener('offline', this.onOnline);
     this.addEventListener('cms-login-success', () => this.renderShell());
     this.addEventListener('cms-session-expired', () => this.renderLogin());
     window.addEventListener('hashchange', this.onHashChange);
@@ -30,6 +37,8 @@ class CmsApp extends HTMLElement {
   }
 
   disconnectedCallback() {
+    window.removeEventListener('online', this.onOnline);
+    window.removeEventListener('offline', this.onOnline);
     window.removeEventListener('hashchange', this.onHashChange);
     window.removeEventListener('beforeunload', this.onBeforeUnload);
     this.unsubscribe?.();
@@ -52,6 +61,8 @@ class CmsApp extends HTMLElement {
   renderLogin() {
     this.unsubscribe?.();
     store.setDirty(false);
+    this.view = null;
+    document.title = `${LABELS.login.title} – ${LABELS.appTitle}`;
     this.innerHTML = '<cms-login></cms-login>';
   }
 
@@ -84,11 +95,13 @@ class CmsApp extends HTMLElement {
             <button class="cms-link-button" type="button" id="cms-logout">${escapeHtml(t.logout)}</button>
           </div>
         </header>
+        <p class="cms-offline" id="cms-offline" role="status" hidden>${escapeHtml(LABELS.offline)}</p>
         <cms-publish-bar class="cms-status" id="cms-status" role="status" aria-live="polite"></cms-publish-bar>
         <main class="cms-main" id="cms-view"></main>
       </div>
     `;
     this.view = this.querySelector('#cms-view');
+    this.updateOffline();
     this.querySelector('#cms-logout').addEventListener('click', () => this.logout());
     this.loadCatalog();
   }
@@ -115,9 +128,15 @@ class CmsApp extends HTMLElement {
     store.loadStats(); // a havi publikálások száma (nem kritikus, a háttérben)
   }
 
+  // „Nincs internet” sáv: a böngésző online/offline jelzése alapján.
+  updateOffline() {
+    const bar = this.querySelector('#cms-offline');
+    if (bar) bar.hidden = navigator.onLine;
+  }
+
   // ---------- Útvonalak ----------
 
-  route() {
+  route({ focus = false } = {}) {
     let route = parseRoute(location.hash);
     if (!route) {
       history.replaceState(null, '', DEFAULT_HASH);
@@ -141,7 +160,24 @@ class CmsApp extends HTMLElement {
     }
     this.view.append(element);
     this.markNav(route);
+    const titles = LABELS.shell.pageTitle;
+    const page =
+      route.name === 'palette' ? titles.palette
+      : route.name === 'password' ? titles.password
+      : route.name === 'list' ? LABELS.categories[route.category]
+      : route.name === 'new' ? titles.newProduct
+      : titles.editProduct;
+    document.title = `${page} – ${LABELS.appTitle}`;
     window.scrollTo(0, 0);
+    // Oldalváltáskor a fókusz a lap címére kerül: billentyűzettel és képernyőolvasóval is az új oldal elején vagyunk.
+    if (focus) {
+      queueMicrotask(() => {
+        const heading = this.view?.querySelector('h1');
+        if (!heading) return;
+        heading.setAttribute('tabindex', '-1');
+        heading.focus({ preventScroll: true });
+      });
+    }
   }
 
   // A fejléc menüjében az aktuális rész jelölése.
@@ -178,7 +214,7 @@ class CmsApp extends HTMLElement {
       store.setDirty(false);
       history.replaceState(null, '', target);
     }
-    this.route();
+    this.route({ focus: true });
   }
 
   async logout() {

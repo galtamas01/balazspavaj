@@ -201,7 +201,7 @@ class CmsColorPalette extends HTMLElement {
         apply: (draft) => ({ products: draft.products, colors: addColor(draft.colors, name, { hex: normalized, border }) }),
         message: L.commit.added(name),
       });
-      notify(`${L.added(name)} ${L.previewRefresh}`);
+      notify(`${L.added(name)}. ${L.previewRefresh}`);
       this.resetNewForm();
     } catch (error) {
       this.fail(error);
@@ -268,7 +268,7 @@ class CmsColorPalette extends HTMLElement {
       this.editing = null;
       this.editValues = null;
       this.open.delete(name);
-      notify(`${renamed ? L.renamed(name, newName) : L.changed(name)} ${L.previewRefresh}`);
+      notify(`${renamed ? L.renamed(name, newName) : L.changed(name)}. ${L.previewRefresh}`);
       this.renderRows();
     } catch (error) {
       this.fail(error);

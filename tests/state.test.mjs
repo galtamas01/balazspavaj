@@ -136,3 +136,71 @@ test('save: a feltöltendő képeket elküldi, a prefixet a katalógusból veszi
   await store.save({ apply: (p) => p, message: 'x', uploads: [{ path: '/assets/teszt/a.webp', base64: 'AAAA' }] });
   assert.deepEqual(bodies[0].uploads, [{ path: '/assets/teszt/a.webp', base64: 'AAAA' }]);
 });
+
+class NetError extends Error {
+  constructor() {
+    super('NETWORK');
+    this.code = 'NETWORK';
+    this.status = 0;
+  }
+}
+
+test('save: hálózati hiba után egyszer magától újrapróbálja', async () => {
+  let saves = 0;
+  const api = async (name) => {
+    if (name === 'catalog') return catalog('d1', '1');
+    saves += 1;
+    if (saves === 1) throw new NetError();
+    return { ok: true, draftSha: 'd2', changed: true, warnings: [] };
+  };
+  const store = createStore(api, { networkRetryDelayMs: 0 });
+  await store.load();
+  const result = await store.save({ apply: (p) => p, message: 'x' });
+  assert.equal(saves, 2);
+  assert.equal(result.changed, true);
+  assert.equal(store.get().draftSha, 'd2');
+  assert.equal(store.get().busy, false);
+});
+
+test('save: a második hálózati hiba kijön az ügyfélnek, a mentés gombja újra használható', async () => {
+  let saves = 0;
+  const api = async (name) => {
+    if (name === 'catalog') return catalog('d1', '1');
+    saves += 1;
+    throw new NetError();
+  };
+  const store = createStore(api, { networkRetryDelayMs: 0 });
+  await store.load();
+  await assert.rejects(store.save({ apply: (p) => p, message: 'x' }), (e) => e.code === 'NETWORK');
+  assert.equal(saves, 2);
+  assert.equal(store.get().busy, false);
+});
+
+test('save: elveszett válasz (a mentés célba ért) → újrapróba 409 → újratöltés, nincs dupla módosítás', async () => {
+  let saves = 0;
+  let serverPrice = '1';
+  const api = async (name, opts) => {
+    if (name === 'catalog') return { ...catalog(saves === 0 ? 'd1' : 'd2', serverPrice) };
+    saves += 1;
+    if (saves === 1) {
+      serverPrice = '9'; // a szerver elmentette, de a válasz nem érkezett meg
+      throw new NetError();
+    }
+    if (saves === 2) throw new ApiError(409, 'STALE');
+    assert.equal(opts.body.baseSha, 'd2');
+    return { ok: true, draftSha: 'd2', changed: false, warnings: [] };
+  };
+  const store = createStore(api, { networkRetryDelayMs: 0 });
+  await store.load();
+  const seen = [];
+  await store.save({
+    apply: (p) => {
+      seen.push(p.pavaje.a.price);
+      return { pavaje: { a: { ...p.pavaje.a, price: '9' } } };
+    },
+    message: 'x',
+  });
+  assert.equal(saves, 3);
+  assert.deepEqual(seen, ['1', '1', '9'], 'a harmadik számítás már a szerver állapotából indul');
+  assert.equal(store.get().draft.products.pavaje.a.price, '9');
+});
