@@ -1,7 +1,7 @@
 // Kivételek → HTTP válaszok. A részleteket csak a function naplóba írjuk, az ügyfél magyar üzenetet kap.
 import { error, MESSAGES } from './http.mjs';
 import { ConfigError } from './auth.mjs';
-import { GithubError, StaleBranchError } from './github.mjs';
+import { GithubError, StaleBranchError, MergeConflictError } from './github.mjs';
 
 // A repóban lévő katalógusfájl hiányzik vagy nem értelmezhető.
 export class DataError extends Error {
@@ -17,6 +17,7 @@ export function toResponse(e) {
     return error(500, 'CONFIG_ERROR', MESSAGES.CONFIG_ERROR);
   }
   if (e instanceof StaleBranchError) return error(409, 'STALE', MESSAGES.STALE);
+  if (e instanceof MergeConflictError) return error(409, 'CONFLICT', MESSAGES.CONFLICT);
   if (e instanceof DataError) {
     console.error('Adathiba:', e.message);
     return error(502, 'DATA_INVALID', MESSAGES.DATA_INVALID);

@@ -24,9 +24,12 @@ export const MESSAGES = {
   CONFIG_ERROR: 'A rendszer beállítása hiányos. Szólj a fejlesztőnek.',
   SERVER_ERROR: 'Váratlan hiba történt. Próbáld újra egy perc múlva.',
   STALE: 'Közben máshol is módosult a katalógus. Frissítsd az oldalt, és vidd át újra a módosításaidat.',
+  CONFLICT: 'A weboldal kódja közben megváltozott, és ez ütközik a nem publikált módosításokkal. Ezt a fejlesztőnek kell összefésülnie. Addig publikálni nem lehet; az „Elvetés” gombbal újrakezdheted a módosításokat.',
   GITHUB_AUTH: 'A tárhely-hozzáférés nem működik (lejárt vagy hibás token?). Szólj a fejlesztőnek.',
   GITHUB_ERROR: 'A tárhely most nem érhető el. Próbáld újra egy perc múlva.',
   DATA_INVALID: 'A katalógusfájl hiányzik vagy hibás. Szólj a fejlesztőnek.',
   VALIDATION: 'A mentés nem sikerült: javítsd a jelölt mezőket.',
   TOO_LARGE: 'A feltöltés túl nagy.',
+  RELOAD: 'A weboldal közben frissült, ezért az előnézet újratöltődött. Nézd át a módosításokat, és publikálj újra.',
+  NOTHING_TO_PUBLISH: 'Nincs publikálandó módosítás.',
 };

@@ -1116,3 +1116,49 @@ cms-toast {
   margin: 0.25rem 0 0;
   padding-left: 1.1rem;
 }
+
+/* ---- Publikálási sáv ---- */
+
+cms-publish-bar {
+  display: block;
+}
+
+.cms-status-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem 1rem;
+}
+
+.cms-status-text {
+  flex: 1 1 18rem;
+  min-width: 0;
+}
+
+.cms-status-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.cms-status-conflict {
+  background: #fde8e8;
+  border-bottom-color: #f2b8b8;
+  color: var(--custom-black);
+}
+
+.cms-status-warn {
+  color: #8a5a00;
+  font-weight: 600;
+}
+
+.cms-dialog-list {
+  margin: 0.5rem 0;
+  padding-left: 1.2rem;
+}
+
+.cms-dialog-list li {
+  margin-bottom: 0.25rem;
+  overflow-wrap: anywhere;
+}

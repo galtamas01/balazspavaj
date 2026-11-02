@@ -22,6 +22,12 @@ Opcionális felülírások (az alapértékek ehhez a repóhoz valók): `GITHUB_O
 
 A token lejár (legfeljebb 1 év): lejárata után a CMS mentése leáll, ilyenkor új tokent kell létrehozni és a Netlify-on kicserélni.
 
+### Publikálás és a fejlesztői változtatások
+
+Az ügyfél minden mentése a `cms-draft` ágra kerül (előnézet), a **Publikálás** gomb egyetlen összefésülő commitot hoz létre a `main` ágon (`CMS: publikálás – …`), ez egy production deployt indít. A havi számláló ezeket a commitokat számolja.
+
+Ha te is a `main`-re pusholsz (pl. kódjavítás), a `cms-draft` lemarad. Az admin betöltésekor és publikálás előtt ezt automatikusan rendezi: ha az ügyfélnek nincs nem publikált módosítása, a `cms-draft` a `main`-re áll; ha van, a `main` változásai beolvadnak a piszkozatba. Ha **ugyanazt a sort** változtattátok a `products.json`-ban, az admin ütközést jelez, és publikálni nem enged, amíg a módosításokat el nem vetik (Elvetés gomb) vagy te össze nem fésülöd a `cms-draft` ágat. A tokennek a `main`-re is írnia kell, ezért a `main` ágon ne legyen ágvédelem (pull request kényszerítése).
+
 ### Netlify beállítások
 
 - *Build command* és *Publish directory*: üresen hagyhatók, a `netlify.toml` beállítja (nincs build lépés, `publish = "."`).

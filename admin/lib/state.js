@@ -14,7 +14,10 @@ export function createStore(api) {
     previewUrl: '',
     assetsPrefix: '/assets/pavaje/',
     mainImages: new Set(),
+    syncConflict: false, // a main változásai nem olvaszthatók be a piszkozatba (lásd netlify/lib/sync.mjs)
+    stats: null, // { publishesThisMonth, estimatedCredits, monthlyCredits, warnAfter }
     busy: false,
+    busyKind: '', // 'save' | 'publish' | 'discard'
     dirty: false,
   };
   const listeners = new Set();
@@ -29,23 +32,42 @@ export function createStore(api) {
     return () => listeners.delete(fn);
   };
 
+  // A szerver állapotának átvétele (betöltés, újratöltés 409 után, publikálás/elvetés után).
+  function applyCatalog(data) {
+    return {
+      draft: data.draft,
+      main: data.main,
+      draftSha: data.draftSha,
+      mainSha: data.mainSha,
+      syncConflict: Boolean(data.syncConflict),
+      previewUrl: data.previewUrl ?? state.previewUrl,
+      assetsPrefix: data.assetsPrefix || state.assetsPrefix,
+      mainImages: collectImagePaths(data.main.products, data.main.colors),
+    };
+  }
+
   async function load() {
     set({ status: 'loading', error: null });
     try {
       const data = await api('catalog');
-      set({
-        status: 'ready',
-        draft: data.draft,
-        main: data.main,
-        draftSha: data.draftSha,
-        mainSha: data.mainSha,
-        previewUrl: data.previewUrl || '',
-        assetsPrefix: data.assetsPrefix || state.assetsPrefix,
-        mainImages: collectImagePaths(data.main.products, data.main.colors),
-      });
+      set({ status: 'ready', ...applyCatalog(data) });
     } catch (error) {
       set({ status: 'error', error });
       throw error;
+    }
+  }
+
+  // Újratöltés a kezelőfelület „betöltés…” állapota nélkül.
+  async function refresh() {
+    set(applyCatalog(await api('catalog')));
+  }
+
+  // A havi publikálások száma (csak tájékoztatás: hiba esetén csendben kimarad).
+  async function loadStats() {
+    try {
+      set({ stats: await api('status') });
+    } catch {
+      // a számláló nem kritikus
     }
   }
 
@@ -55,7 +77,7 @@ export function createStore(api) {
   // Visszaad: { warnings, changed }.
   async function commit({ apply, message, uploads = [] }) {
     if (state.busy) throw new ChangeError('Egy másik mentés még folyamatban van.');
-    set({ busy: true });
+    set({ busy: true, busyKind: 'save' });
     try {
       for (let attempt = 0; ; attempt += 1) {
         const { products, colors } = apply(state.draft);
@@ -68,15 +90,51 @@ export function createStore(api) {
           return { warnings: result.warnings || [], changed: Boolean(result.changed) };
         } catch (error) {
           if (error.status === 409 && attempt === 0) {
-            const data = await api('catalog');
-            set({ draft: data.draft, main: data.main, draftSha: data.draftSha, mainSha: data.mainSha, mainImages: collectImagePaths(data.main.products, data.main.colors) });
+            await refresh();
             continue;
           }
           throw error;
         }
       }
     } finally {
-      set({ busy: false });
+      set({ busy: false, busyKind: '' });
+    }
+  }
+
+  // Publikálás: a piszkozat élesítése. `summary`: rövid összegzés a commit üzenetébe (pl. „2 új, 1 módosított”).
+  // Siker után az állapot újratöltődik (a piszkozat és az éles ág azonos). Elavult állapotnál (409) is újratölt,
+  // hogy az ügyfél a valós állapotot lássa, majd a hibát továbbdobja.
+  async function publish({ summary = '' } = {}) {
+    if (state.busy) throw new ChangeError('Egy másik művelet még folyamatban van.');
+    set({ busy: true, busyKind: 'publish' });
+    try {
+      try {
+        await api('publish', { method: 'POST', body: { draftSha: state.draftSha, summary } });
+      } catch (error) {
+        if (error.status === 409) await refresh().catch(() => {});
+        throw error;
+      }
+      await refresh();
+      await loadStats();
+    } finally {
+      set({ busy: false, busyKind: '' });
+    }
+  }
+
+  // A nem publikált módosítások elvetése: a piszkozat visszaáll az éles állapotra.
+  async function discard() {
+    if (state.busy) throw new ChangeError('Egy másik művelet még folyamatban van.');
+    set({ busy: true, busyKind: 'discard' });
+    try {
+      try {
+        await api('discard', { method: 'POST', body: { draftSha: state.draftSha } });
+      } catch (error) {
+        if (error.status === 409) await refresh().catch(() => {});
+        throw error;
+      }
+      await refresh();
+    } finally {
+      set({ busy: false, busyKind: '' });
     }
   }
 
@@ -91,5 +149,5 @@ export function createStore(api) {
     if (state.dirty !== dirty) set({ dirty });
   };
 
-  return { get, set, subscribe, load, save, saveCatalog, setDirty };
+  return { get, set, subscribe, load, refresh, loadStats, save, saveCatalog, publish, discard, setDirty };
 }
