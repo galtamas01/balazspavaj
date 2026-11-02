@@ -12,5 +12,7 @@ export function getConfig(env = process.env) {
     productsPath: env.PRODUCTS_PATH || 'produse/products.json',
     colorsPath: env.COLORS_PATH || 'produse/colors.json',
     assetsDir: env.ASSETS_DIR || 'assets/pavaje',
+    // A piszkozat-ág (cms-draft) előnézeti címe a Netlify-on (branch deploy); záró perjel nélkül.
+    previewUrl: (env.PREVIEW_URL || 'https://cms-draft--balazspavaj.netlify.app').replace(/\/+$/, ''),
   };
 }

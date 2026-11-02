@@ -24,6 +24,7 @@ const CONFIG = {
   productsPath: 'produse/products.json',
   colorsPath: 'produse/colors.json',
   assetsDir: 'assets/pavaje',
+  previewUrl: 'https://cms-draft--balazspavaj.netlify.app',
 };
 
 let cookie;
@@ -81,6 +82,7 @@ test('catalog: munkamenet kell, csak GET, és létrehozza a cms-draft ágat', as
   assert.equal(data.draftSha, fake.head('cms-draft'));
   assert.equal(data.draftSha, fake.head('main'));
   assert.equal(data.mainSha, fake.head('main'));
+  assert.equal(data.previewUrl, 'https://cms-draft--balazspavaj.netlify.app');
 });
 
 test('catalog: hiányzó colors.json üres palettát ad, hiányzó products.json adathiba', async () => {

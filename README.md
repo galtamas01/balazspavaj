@@ -18,7 +18,7 @@ Netlify: *Site configuration → Environment variables*. A titkokat soha ne tedd
 
 Jelszócsere: `npm run hash-password`, majd az új `ADMIN_PASSWORD_HASH` beírása a Netlify-on és egy új deploy (*Deploys → Trigger deploy*). A `SESSION_SECRET` cseréje minden bejelentkezett felhasználót kiléptet.
 
-Opcionális felülírások (az alapértékek ehhez a repóhoz valók): `GITHUB_OWNER`, `GITHUB_REPO`, `MAIN_BRANCH` (`main`), `DRAFT_BRANCH` (`cms-draft`), `PRODUCTS_PATH`, `COLORS_PATH`, `ASSETS_DIR`.
+Opcionális felülírások (az alapértékek ehhez a repóhoz valók): `GITHUB_OWNER`, `GITHUB_REPO`, `MAIN_BRANCH` (`main`), `DRAFT_BRANCH` (`cms-draft`), `PRODUCTS_PATH`, `COLORS_PATH`, `ASSETS_DIR`, `PREVIEW_URL` (a piszkozat előnézeti címe, alapból `https://cms-draft--balazspavaj.netlify.app`; ide mutat az admin „Előnézet” hivatkozása).
 
 A token lejár (legfeljebb 1 év): lejárata után a CMS mentése leáll, ilyenkor új tokent kell létrehozni és a Netlify-on kicserélni.
 
