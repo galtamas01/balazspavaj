@@ -42,6 +42,7 @@ export function makeHandler(getGithub) {
         main: { products: mainProducts, colors: mainColors },
         draftSha,
         mainSha,
+        previewUrl: github.config.previewUrl || '',
       });
     } catch (e) {
       return toResponse(e);

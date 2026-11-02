@@ -118,4 +118,6 @@ test('config: GITHUB_TOKEN kötelező, a többi alapértelmezett', () => {
     { owner: 'galtamas01', repo: 'balazspavaj', main: 'main', draft: 'cms-draft', products: 'produse/products.json', colors: 'produse/colors.json', assets: 'assets/pavaje' },
   );
   assert.equal(getConfig({ GITHUB_TOKEN: 't', DRAFT_BRANCH: 'x' }).draftBranch, 'x');
+  assert.equal(c.previewUrl, 'https://cms-draft--balazspavaj.netlify.app');
+  assert.equal(getConfig({ GITHUB_TOKEN: 't', PREVIEW_URL: 'https://x.example///' }).previewUrl, 'https://x.example');
 });

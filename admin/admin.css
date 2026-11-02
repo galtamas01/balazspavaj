@@ -174,3 +174,758 @@ cms-app :focus-visible {
   color: #1d6b3a;
   font-weight: 600;
 }
+
+/* ======== 3. fázis: terméklista és szerkesztő ======== */
+
+cms-app [hidden],
+.cms-dialog [hidden] {
+  display: none !important;
+}
+
+.cms-shell :focus-visible,
+.cms-dialog :focus-visible,
+cms-toast :focus-visible {
+  outline: 3px solid var(--custom-red);
+  outline-offset: 2px;
+}
+
+.cms-visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+}
+
+.cms-menu {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.cms-menu-link {
+  min-height: 44px;
+  display: inline-flex;
+  align-items: center;
+  padding: 0 0.75rem;
+  font-weight: 600;
+  color: var(--custom-black);
+  text-decoration: none;
+}
+
+/* ---- Állapotsor ---- */
+
+.cms-status {
+  padding: 0.6rem 16px;
+  background: #fff;
+  border-bottom: 1px solid var(--custom-grey-transparent);
+  font-size: 0.9rem;
+  color: var(--text-grey);
+  line-height: 1.4;
+}
+
+.cms-status:empty {
+  display: none;
+}
+
+.cms-status-pending {
+  background: #fff7e0;
+  color: var(--custom-black);
+  border-bottom-color: #f0dca0;
+}
+
+.cms-status-busy {
+  background: #eef3ff;
+}
+
+.cms-status a {
+  color: var(--custom-red);
+  font-weight: 600;
+}
+
+.cms-status-note {
+  display: block;
+  color: var(--text-grey);
+  font-size: 0.85rem;
+}
+
+/* ---- Gombok ---- */
+
+.cms-btn {
+  min-height: 44px;
+  min-width: 44px;
+  padding: 0 1rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.4rem;
+  font: inherit;
+  font-weight: 600;
+  color: var(--custom-black);
+  background: #fff;
+  border: 1px solid var(--custom-grey);
+  border-radius: 8px;
+  text-decoration: none;
+  cursor: pointer;
+}
+
+.cms-btn:hover:not(:disabled) {
+  background: var(--custom-grey-transparent);
+}
+
+.cms-btn:disabled,
+.cms-icon-btn:disabled,
+.cms-link-button:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.cms-btn-primary {
+  background: var(--custom-red);
+  border-color: var(--custom-red);
+  color: var(--custom-white);
+}
+
+.cms-btn-primary:hover:not(:disabled) {
+  background: var(--custom-red-dark);
+}
+
+.cms-btn-danger {
+  background: var(--custom-red-dark);
+  border-color: var(--custom-red-dark);
+  color: var(--custom-white);
+}
+
+.cms-btn-danger:hover:not(:disabled) {
+  background: #4d0f11;
+}
+
+.cms-btn-danger-outline {
+  color: var(--custom-red-dark);
+  border-color: var(--custom-red);
+}
+
+.cms-icon-btn {
+  width: 44px;
+  height: 44px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font: inherit;
+  font-size: 0.85rem;
+  background: #fff;
+  border: 1px solid var(--custom-grey);
+  border-radius: 8px;
+  cursor: pointer;
+}
+
+.cms-icon-btn:hover:not(:disabled) {
+  background: var(--custom-grey-transparent);
+}
+
+.cms-icon-btn-danger {
+  color: var(--custom-red-dark);
+  border-color: var(--custom-red);
+}
+
+/* ---- Terméklista ---- */
+
+.cms-list {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.cms-tabs {
+  display: flex;
+  gap: 0.25rem;
+  overflow-x: auto;
+  border-bottom: 2px solid var(--custom-grey-transparent);
+}
+
+.cms-tab {
+  flex: 0 0 auto;
+  min-height: 48px;
+  padding: 0 1rem;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  color: var(--text-grey);
+  font-weight: 600;
+  text-decoration: none;
+  border-bottom: 3px solid transparent;
+  margin-bottom: -2px;
+}
+
+.cms-tab[aria-selected='true'] {
+  color: var(--custom-red);
+  border-bottom-color: var(--custom-red);
+}
+
+.cms-tab-count {
+  min-width: 1.5rem;
+  padding: 0 0.4rem;
+  text-align: center;
+  font-size: 0.8rem;
+  line-height: 1.5rem;
+  border-radius: 999px;
+  background: var(--custom-grey-transparent);
+  color: var(--custom-black);
+}
+
+.cms-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+}
+
+.cms-search {
+  flex: 1 1 14rem;
+}
+
+.cms-add {
+  width: auto;
+  min-width: 11rem;
+  padding: 0 1.25rem;
+  border-radius: 8px;
+  height: 48px;
+}
+
+.cms-items {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.cms-item {
+  display: grid;
+  grid-template-columns: 64px 1fr;
+  gap: 0.5rem 0.75rem;
+  align-items: center;
+  padding: 0.75rem;
+  background: #fff;
+  border: 1px solid var(--custom-grey-transparent);
+  border-radius: 8px;
+}
+
+.cms-thumb {
+  width: 64px;
+  height: 64px;
+  object-fit: cover;
+  border-radius: 6px;
+  background: var(--custom-grey-transparent);
+}
+
+.cms-thumb-empty {
+  display: block;
+}
+
+.cms-thumb-large {
+  width: 96px;
+  height: 96px;
+}
+
+.cms-item-name {
+  font-weight: 700;
+  color: var(--custom-black);
+  text-decoration: none;
+  overflow-wrap: anywhere;
+}
+
+.cms-item-name:hover {
+  color: var(--custom-red);
+}
+
+.cms-item-meta {
+  margin-top: 0.15rem;
+  color: var(--text-grey);
+  font-size: 0.9rem;
+}
+
+.cms-item-actions {
+  grid-column: 1 / -1;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  align-items: center;
+}
+
+.cms-item-order {
+  display: inline-flex;
+  gap: 0.25rem;
+  margin-left: auto;
+}
+
+.cms-empty {
+  padding: 2rem 1rem;
+  text-align: center;
+  color: var(--text-grey);
+  background: #fff;
+  border: 1px dashed var(--custom-grey);
+  border-radius: 8px;
+}
+
+.cms-badge {
+  display: inline-block;
+  margin-left: 0.25rem;
+  padding: 0.1rem 0.5rem;
+  font-size: 0.75rem;
+  font-weight: 700;
+  border-radius: 999px;
+}
+
+.cms-badge-new {
+  background: #dff3e4;
+  color: #1d6b3a;
+}
+
+.cms-badge-changed {
+  background: #fff1c2;
+  color: #7a5a00;
+}
+
+@media (min-width: 826px) {
+  .cms-item {
+    grid-template-columns: 64px 1fr auto;
+  }
+
+  .cms-item-actions {
+    grid-column: auto;
+    justify-content: flex-end;
+  }
+
+  .cms-item-order {
+    margin-left: 0.5rem;
+  }
+}
+
+/* ---- Szerkesztő ---- */
+
+.cms-back {
+  align-self: flex-start;
+  min-height: 44px;
+  display: inline-flex;
+  align-items: center;
+  color: var(--custom-red);
+  font-weight: 600;
+}
+
+.cms-editor {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.cms-editor-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 1.5rem;
+  align-items: start;
+}
+
+@media (min-width: 826px) {
+  .cms-editor-grid {
+    grid-template-columns: minmax(0, 1fr) 20rem;
+  }
+
+  .cms-editor-aside {
+    position: sticky;
+    top: 5rem;
+  }
+}
+
+.cms-editor-form {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.cms-section {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  background: #fff;
+  border: 1px solid var(--custom-grey-transparent);
+  border-radius: 8px;
+  padding: 1rem 1.25rem;
+}
+
+.cms-section-title {
+  font-size: 1.05rem;
+  font-weight: 700;
+}
+
+.cms-advanced > summary {
+  cursor: pointer;
+  min-height: 44px;
+  display: flex;
+  align-items: center;
+}
+
+.cms-advanced[open] > summary {
+  margin-bottom: 0.5rem;
+}
+
+.cms-field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  min-width: 0;
+}
+
+.cms-field-grow {
+  flex: 1 1 12rem;
+}
+
+.cms-hint {
+  font-size: 0.85rem;
+  color: var(--text-grey);
+  line-height: 1.4;
+}
+
+.cms-hint-warn {
+  color: var(--custom-red-dark);
+  background: rgba(176, 33, 38, 0.08);
+  border-radius: 6px;
+  padding: 0.5rem 0.75rem;
+}
+
+.cms-field-error {
+  color: var(--custom-red-dark);
+  font-size: 0.9rem;
+  font-weight: 600;
+}
+
+.cms-input[aria-invalid='true'] {
+  border-color: var(--custom-red);
+  box-shadow: 0 0 0 2px rgba(176, 33, 38, 0.25);
+}
+
+select.cms-input {
+  padding-right: 0.5rem;
+}
+
+.cms-id-display {
+  align-self: flex-start;
+  padding: 0.35rem 0.6rem;
+  background: var(--custom-grey-transparent);
+  border-radius: 6px;
+  font-size: 0.95rem;
+  overflow-wrap: anywhere;
+}
+
+.cms-check,
+.cms-radio {
+  min-height: 44px;
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  cursor: pointer;
+}
+
+.cms-check input,
+.cms-radio input {
+  width: 22px;
+  height: 22px;
+  accent-color: var(--custom-red);
+  flex: 0 0 auto;
+}
+
+.cms-radios {
+  display: flex;
+  flex-wrap: wrap;
+  column-gap: 1.5rem;
+}
+
+.cms-price-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: 0.75rem;
+}
+
+.cms-price-part {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  flex: 0 1 10rem;
+}
+
+.cms-price-suffix {
+  min-height: 48px;
+  display: inline-flex;
+  align-items: center;
+  font-weight: 600;
+}
+
+.cms-image-note {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  align-items: flex-start;
+}
+
+/* ---- Ismétlődő sorok ---- */
+
+.cms-rows {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.cms-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  align-items: flex-end;
+  padding: 0.75rem;
+  border: 1px solid var(--custom-grey-transparent);
+  border-radius: 8px;
+  background: var(--custom-white);
+}
+
+.cms-row-fields {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  flex: 1 1 14rem;
+}
+
+.cms-row-actions {
+  display: flex;
+  gap: 0.25rem;
+  margin-left: auto;
+}
+
+.cms-repeater-add {
+  margin-top: 0.75rem;
+  align-self: flex-start;
+}
+
+.cms-repeater-empty {
+  margin-bottom: 0.5rem;
+}
+
+cms-repeater {
+  display: block;
+}
+
+.cms-color-select {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.cms-color-select .cms-input {
+  flex: 1 1 auto;
+}
+
+.cms-swatch {
+  flex: 0 0 auto;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: var(--custom-grey-transparent);
+}
+
+.cms-swatch-border {
+  border: 1px solid #e0e0e0;
+}
+
+.cms-swatch-large {
+  width: 32px;
+  height: 32px;
+}
+
+/* ---- Előnézet ---- */
+
+.cms-editor-aside {
+  background: #fff;
+  border: 1px solid var(--custom-grey-transparent);
+  border-radius: 8px;
+  padding: 1rem 1.25rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.cms-preview {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.cms-preview-image {
+  width: 100%;
+  aspect-ratio: 4 / 3;
+  object-fit: cover;
+  border-radius: 6px;
+  background: var(--custom-grey-transparent);
+}
+
+.cms-preview-empty {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--text-grey);
+}
+
+.cms-preview-name {
+  font-size: 1.05rem;
+  overflow-wrap: anywhere;
+}
+
+.cms-preview-price {
+  font-weight: 700;
+  color: var(--custom-red);
+}
+
+.cms-preview-swatches {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+}
+
+.cms-preview-list {
+  padding-left: 1.1rem;
+  font-size: 0.9rem;
+}
+
+/* ---- Hibaösszesítő és műveletsor ---- */
+
+.cms-form-errors ul {
+  margin: 0.35rem 0 0 1.1rem;
+}
+
+.cms-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  align-items: center;
+  position: sticky;
+  bottom: 0;
+  padding: 0.75rem 0;
+  background: linear-gradient(to top, var(--custom-white) 70%, rgba(249, 248, 254, 0));
+}
+
+.cms-save {
+  width: auto;
+  min-width: 10rem;
+  padding: 0 1.5rem;
+  border-radius: 8px;
+}
+
+.cms-save:disabled {
+  opacity: 0.6;
+  cursor: wait;
+}
+
+/* ---- Megerősítő ablak és értesítések ---- */
+
+.cms-dialog {
+  max-width: min(28rem, calc(100vw - 2rem));
+  margin: auto;
+  padding: 0;
+  border: none;
+  border-radius: 12px;
+  background: #fff;
+  color: var(--custom-black);
+  font-family: var(--font-inter);
+}
+
+.cms-dialog::backdrop {
+  background: rgba(0, 0, 0, 0.5);
+}
+
+.cms-dialog-body {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  padding: 1.5rem;
+}
+
+.cms-dialog-title {
+  font-size: 1.15rem;
+}
+
+.cms-dialog-text {
+  line-height: 1.5;
+}
+
+.cms-dialog-actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 0.75rem;
+}
+
+cms-toast {
+  position: fixed;
+  left: 50%;
+  bottom: 1rem;
+  transform: translateX(-50%);
+  width: min(32rem, calc(100vw - 2rem));
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  z-index: 50;
+  pointer-events: none;
+  font-family: var(--font-inter);
+}
+
+.cms-toast-item {
+  pointer-events: auto;
+  padding: 0.75rem 1rem;
+  border-radius: 8px;
+  background: #1d6b3a;
+  color: #fff;
+  line-height: 1.4;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.25);
+  cursor: pointer;
+}
+
+.cms-toast-warn {
+  background: #7a5a00;
+}
+
+.cms-toast-error {
+  background: var(--custom-red-dark);
+}
+
+/* ---- Keskeny (telefonos) képernyő ---- */
+
+@media (max-width: 520px) {
+  .cms-header {
+    flex-wrap: wrap;
+    row-gap: 0;
+  }
+
+  .cms-brand {
+    font-size: 1.05rem;
+    gap: 0.5rem;
+  }
+
+  .cms-brand img {
+    width: 32px;
+  }
+
+  .cms-menu {
+    gap: 0;
+  }
+
+  .cms-menu-link,
+  .cms-link-button {
+    padding: 0 0.5rem;
+  }
+
+  .cms-main {
+    padding: 1.25rem 12px;
+  }
+
+  .cms-section,
+  .cms-editor-aside {
+    padding: 0.85rem 0.9rem;
+  }
+}
