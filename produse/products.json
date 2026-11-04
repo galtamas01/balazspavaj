@@ -136,6 +136,31 @@
             ],
             "unit": "mp"
         },
+        "test-product": {
+            "name": "Test Product",
+            "image": "/assets/pavaje/test-product_ac1952de.webp",
+            "price": "20",
+            "unit": "mp",
+            "colors": [
+                {
+                    "name": "verde"
+                },
+                {
+                    "name": "maro",
+                    "price": "25"
+                }
+            ],
+            "sizes": [
+                {
+                    "name": "Small",
+                    "dimensions": "10x20x30"
+                },
+                {
+                    "name": "Big",
+                    "dimensions": "20x30x40"
+                }
+            ]
+        },
         "pavaj-dreptunghi-mic-8cm": {
             "name": "Pavaj dreptunghi 8 cm",
             "image": "/assets/pavaje/dreptunghi_base.webp",
@@ -169,31 +194,6 @@
                 }
             ],
             "unit": "mp"
-        },
-        "test-product": {
-            "name": "Test Product",
-            "image": "/assets/pavaje/test-product_ac1952de.webp",
-            "price": "20",
-            "unit": "mp",
-            "colors": [
-                {
-                    "name": "verde"
-                },
-                {
-                    "name": "maro",
-                    "price": "25"
-                }
-            ],
-            "sizes": [
-                {
-                    "name": "Small",
-                    "dimensions": "10x20x30"
-                },
-                {
-                    "name": "Big",
-                    "dimensions": "20x30x40"
-                }
-            ]
         }
     },
     "premium-pavaje": {
